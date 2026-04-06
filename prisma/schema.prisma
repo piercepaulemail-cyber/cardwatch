@@ -83,3 +83,13 @@ model ScanResult {
 
   @@unique([userId, ebayItemId])
 }
+
+model SearchCache {
+  id          String   @id @default(cuid())
+  cacheKey    String   @unique
+  resultsJson String
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([cacheKey, expiresAt])
+}

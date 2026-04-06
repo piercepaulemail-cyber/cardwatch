@@ -1,8 +1,11 @@
+import { prisma } from "./db";
+
 const BROWSE_API_ENDPOINT =
   "https://api.ebay.com/buy/browse/v1/item_summary/search";
 const TOKEN_ENDPOINT = "https://api.ebay.com/identity/v1/oauth2/token";
 const SPORTS_CARDS_CATEGORY = "261328";
 const CONDITION_UNGRADED = "4000";
+const CACHE_TTL_MINUTES = 15;
 
 let tokenCache: { token: string; expiresAt: number } = {
   token: "",
@@ -61,12 +64,88 @@ export interface EbayResult {
   matchedDesc: string;
 }
 
-export async function searchEbay(
-  query: EbaySearchQuery,
+// --- Cache helpers ---
+
+export function normalizeKeywords(
+  playerName: string,
+  cardDescription: string
+): string {
+  return `${playerName} ${cardDescription}`.toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+/**
+ * Search eBay with a shared cache layer.
+ * Cache key is the normalized keywords (no maxPrice — that's applied per-user after).
+ * Returns { results, fromCache } so callers can skip rate-limit delay on hits.
+ */
+export async function searchEbayWithCache(
+  playerName: string,
+  cardDescription: string,
+  lookbackMinutes: number
+): Promise<{ results: EbayResult[]; fromCache: boolean }> {
+  const cacheKey = normalizeKeywords(playerName, cardDescription);
+  const now = new Date();
+
+  // Check cache
+  try {
+    const cached = await prisma.searchCache.findFirst({
+      where: {
+        cacheKey,
+        expiresAt: { gt: now },
+      },
+    });
+
+    if (cached) {
+      console.log(`[Cache HIT] "${cacheKey}"`);
+      const results: EbayResult[] = JSON.parse(cached.resultsJson).map(
+        (r: EbayResult) => ({
+          ...r,
+          listingStartTime: new Date(r.listingStartTime),
+        })
+      );
+      return { results, fromCache: true };
+    }
+  } catch (e) {
+    console.error("Cache read error:", e);
+  }
+
+  // Cache miss — call eBay API (no maxPrice filter)
+  console.log(`[Cache MISS] "${cacheKey}" — calling eBay API`);
+  const results = await searchEbayRaw(playerName, cardDescription, lookbackMinutes);
+
+  // Store in cache
+  try {
+    const expiresAt = new Date(now.getTime() + CACHE_TTL_MINUTES * 60 * 1000);
+    await prisma.searchCache.upsert({
+      where: { cacheKey },
+      create: {
+        cacheKey,
+        resultsJson: JSON.stringify(results),
+        expiresAt,
+      },
+      update: {
+        resultsJson: JSON.stringify(results),
+        expiresAt,
+        createdAt: now,
+      },
+    });
+  } catch (e) {
+    console.error("Cache write error:", e);
+  }
+
+  return { results, fromCache: false };
+}
+
+/**
+ * Raw eBay API call — no cache, no maxPrice filter.
+ */
+async function searchEbayRaw(
+  playerName: string,
+  cardDescription: string,
   lookbackMinutes: number
 ): Promise<EbayResult[]> {
   const token = await getEbayToken();
-  const keywords = `${query.playerName} ${query.cardDescription}`;
+  const keywords = `${playerName} ${cardDescription}`;
   const cutoffTime = new Date(Date.now() - lookbackMinutes * 60 * 1000);
 
   const filters = [
@@ -74,10 +153,6 @@ export async function searchEbay(
     `conditionIds:{${CONDITION_UNGRADED}}`,
     "buyingOptions:{AUCTION|FIXED_PRICE}",
   ];
-
-  if (query.maxPrice) {
-    filters.push(`price:[..${query.maxPrice}]`);
-  }
 
   const params = new URLSearchParams({
     q: keywords,
@@ -130,14 +205,39 @@ export async function searchEbay(
       itemUrl: item.itemWebUrl || "",
       imageUrl: item.image?.imageUrl || "",
       listingStartTime: new Date(originDate || Date.now()),
-      matchedPlayer: query.playerName,
-      matchedDesc: query.cardDescription,
+      matchedPlayer: playerName,
+      matchedDesc: cardDescription,
     });
   }
 
   return results;
 }
 
+/**
+ * Search eBay for one watchlist entry (used by manual scans).
+ * Uses the shared cache, then applies maxPrice filter per-user.
+ */
+export async function searchEbay(
+  query: EbaySearchQuery,
+  lookbackMinutes: number
+): Promise<{ results: EbayResult[]; fromCache: boolean }> {
+  const { results, fromCache } = await searchEbayWithCache(
+    query.playerName,
+    query.cardDescription,
+    lookbackMinutes
+  );
+
+  // Apply per-user maxPrice filter after cache
+  const filtered = query.maxPrice
+    ? results.filter((r) => r.currentPrice <= query.maxPrice!)
+    : results;
+
+  return { results: filtered, fromCache };
+}
+
+/**
+ * Run scans for a user's full watchlist. Deduplicates results.
+ */
 export async function runUserScan(
   queries: EbaySearchQuery[],
   lookbackMinutes: number
@@ -147,12 +247,17 @@ export async function runUserScan(
 
   for (let i = 0; i < queries.length; i++) {
     try {
-      const results = await searchEbay(queries[i], lookbackMinutes);
+      const { results, fromCache } = await searchEbay(queries[i], lookbackMinutes);
       for (const item of results) {
         if (!seenIds.has(item.ebayItemId)) {
           seenIds.add(item.ebayItemId);
           allResults.push(item);
         }
+      }
+
+      // Only delay between actual API calls, skip for cache hits
+      if (!fromCache && i < queries.length - 1) {
+        await new Promise((r) => setTimeout(r, 1000));
       }
     } catch (e) {
       console.error(
@@ -160,11 +265,20 @@ export async function runUserScan(
         e
       );
     }
-
-    if (i < queries.length - 1) {
-      await new Promise((r) => setTimeout(r, 1000));
-    }
   }
 
   return allResults;
+}
+
+/**
+ * Purge expired cache entries. Call periodically.
+ */
+export async function purgeExpiredCache(): Promise<number> {
+  const result = await prisma.searchCache.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  });
+  if (result.count > 0) {
+    console.log(`[Cache] Purged ${result.count} expired entries`);
+  }
+  return result.count;
 }
