@@ -1,23 +1,22 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { neon } from "@neondatabase/serverless";
+import { Pool } from "@neondatabase/serverless";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 function createPrismaClient() {
   const url = process.env.DATABASE_URL!;
 
-  // Neon serverless adapter for postgresql:// URLs
   if (url.startsWith("postgresql://") || url.startsWith("postgres://")) {
-    const sql = neon(url);
-    const adapter = new PrismaNeon(sql);
-    return new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
+    const pool = new Pool({ connectionString: url });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const adapter = new PrismaNeon(pool as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new PrismaClient({ adapter } as any);
   }
 
-  // Prisma Accelerate / local dev
-  return new PrismaClient({
-    accelerateUrl: url,
-  } as ConstructorParameters<typeof PrismaClient>[0]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new PrismaClient({ accelerateUrl: url } as any);
 }
 
 export const prisma = globalForPrisma.prisma || createPrismaClient();
