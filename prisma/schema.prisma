@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  image         String?
+  passwordHash  String?
+  subscription  Subscription?
+  watchlist     WatchlistEntry[]
+  scanResults   ScanResult[]
+  accounts      Account[]
+  createdAt     DateTime       @default(now())
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String    @unique
+  stripeSubscriptionId String    @unique
+  stripePriceId        String
+  tier                 String    // scout, pro, elite
+  scanIntervalMinutes  Int       // 180, 60, 15
+  status               String    // trialing, active, canceled, past_due
+  trialEndsAt          DateTime?
+  currentPeriodEnd     DateTime
+  lastScanAt           DateTime?
+}
+
+model WatchlistEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerName      String
+  cardDescription String
+  maxPrice        Float?
+  notes           String?
+  createdAt       DateTime @default(now())
+}
+
+model ScanResult {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ebayItemId       String
+  title            String
+  currentPrice     Float
+  listingType      String
+  bidCount         Int      @default(0)
+  sellerName       String
+  sellerFeedback   Int      @default(0)
+  itemUrl          String
+  imageUrl         String?
+  listingStartTime DateTime
+  matchedPlayer    String
+  matchedDesc      String
+  scanTimestamp    DateTime @default(now())
+
+  @@unique([userId, ebayItemId])
+}

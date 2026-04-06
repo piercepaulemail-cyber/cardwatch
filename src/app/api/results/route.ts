@@ -1,0 +1,46 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+
+export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const sortBy = searchParams.get("sortBy") || "scanTimestamp";
+  const sortOrder = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = 50;
+
+  const allowedSorts = [
+    "currentPrice",
+    "bidCount",
+    "sellerFeedback",
+    "listingType",
+    "listingStartTime",
+    "scanTimestamp",
+    "matchedPlayer",
+    "title",
+  ];
+
+  const orderField = allowedSorts.includes(sortBy) ? sortBy : "scanTimestamp";
+
+  const [results, total] = await Promise.all([
+    prisma.scanResult.findMany({
+      where: { userId: session.user.id },
+      orderBy: { [orderField]: sortOrder },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.scanResult.count({ where: { userId: session.user.id } }),
+  ]);
+
+  return NextResponse.json({
+    results,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  });
+}
