@@ -68,7 +68,16 @@ export interface EbaySearchQuery {
   maxPrice?: number | null;
   minPrice?: number | null;
   listingType?: string | null; // "all", "buyItNow", "auction"
+  condition?: string | null;   // "ungraded", "nearMint", "excellent", "graded"
 }
+
+// eBay condition IDs for trading cards
+const CONDITION_MAP: Record<string, string> = {
+  ungraded: "4000",    // Ungraded
+  nearMint: "4000",    // Ungraded - Near Mint (filtered client-side via descriptor)
+  excellent: "4000",   // Ungraded - Excellent (filtered client-side via descriptor)
+  graded: "2750",      // Graded (Like New)
+};
 
 export interface EbayResult {
   ebayItemId: string;
@@ -83,6 +92,7 @@ export interface EbayResult {
   listingStartTime: Date;
   matchedPlayer: string;
   matchedDesc: string;
+  conditionId: string;
 }
 
 // --- Cache helpers ---
@@ -171,7 +181,6 @@ async function searchEbayRaw(
 
   const filters = [
     `categoryId:${SPORTS_CARDS_CATEGORY}`,
-    `conditionIds:{${CONDITION_UNGRADED}}`,
     "buyingOptions:{AUCTION|FIXED_PRICE}",
   ];
 
@@ -228,6 +237,7 @@ async function searchEbayRaw(
       listingStartTime: new Date(originDate || Date.now()),
       matchedPlayer: playerName,
       matchedDesc: cardDescription,
+      conditionId: item.conditionId || item.condition?.conditionId || "",
     });
   }
 
@@ -263,6 +273,14 @@ export async function searchEbay(
     } else if (query.listingType === "auction") {
       filtered = filtered.filter((r) => r.listingType === "Auction");
     }
+  }
+
+  // Condition filter
+  const cond = query.condition || "ungraded";
+  if (cond === "graded") {
+    filtered = filtered.filter((r) => r.conditionId === "2750");
+  } else if (cond === "ungraded" || cond === "nearMint" || cond === "excellent") {
+    filtered = filtered.filter((r) => r.conditionId === "4000" || r.conditionId === "");
   }
 
   return { results: filtered, fromCache };

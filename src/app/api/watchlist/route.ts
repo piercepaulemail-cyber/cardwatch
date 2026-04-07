@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Active subscription required" }, { status: 403 });
   }
 
-  const { playerName, cardDescription, maxPrice, minPrice, listingType, notes } =
+  const { playerName, cardDescription, maxPrice, minPrice, listingType, condition, notes } =
     await request.json();
 
   if (!playerName || !cardDescription) {
@@ -58,6 +58,7 @@ export async function POST(request: Request) {
       maxPrice: maxPrice ? parseFloat(maxPrice) : null,
       minPrice: minPrice ? parseFloat(minPrice) : null,
       listingType: ["all", "buyItNow", "auction"].includes(listingType) ? listingType : "all",
+      condition: ["ungraded", "nearMint", "excellent", "graded"].includes(condition) ? condition : "ungraded",
       notes: notes ? String(notes).slice(0, 500) : null,
     },
   });

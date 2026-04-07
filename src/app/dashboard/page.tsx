@@ -12,6 +12,7 @@ interface WatchlistEntry {
   maxPrice: number | null;
   minPrice: number | null;
   listingType: string | null;
+  condition: string | null;
 }
 
 interface ScanResult {
@@ -50,6 +51,7 @@ export default function DashboardPage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [listingType, setListingType] = useState("all");
+  const [condition, setCondition] = useState("ungraded");
 
   const loadResults = useCallback(async () => {
     const res = await fetch(
@@ -111,6 +113,7 @@ export default function DashboardPage() {
         maxPrice: maxPrice || null,
         minPrice: minPrice || null,
         listingType,
+        condition,
       }),
     });
     setPlayerName("");
@@ -118,6 +121,7 @@ export default function DashboardPage() {
     setMaxPrice("");
     setMinPrice("");
     setListingType("all");
+    setCondition("ungraded");
     loadWatchlist();
   }
 
@@ -286,6 +290,27 @@ export default function DashboardPage() {
                   <span className="text-sm">Auction</span>
                 </label>
               </div>
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">Condition</p>
+                {[
+                  { value: "ungraded", label: "Ungraded (Raw)" },
+                  { value: "nearMint", label: "Near Mint or Better" },
+                  { value: "excellent", label: "Excellent" },
+                  { value: "graded", label: "Graded (PSA, BGS, SGC)" },
+                ].map((opt) => (
+                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="condition"
+                      value={opt.value}
+                      checked={condition === opt.value}
+                      onChange={(e) => setCondition(e.target.value)}
+                      className="w-4 h-4 accent-navy"
+                    />
+                    <span className="text-sm">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
               <button
                 type="submit"
                 className="w-full bg-navy text-white font-semibold py-2.5 rounded-lg hover:bg-navy-light transition text-sm"
@@ -335,6 +360,11 @@ export default function DashboardPage() {
                       {entry.listingType && entry.listingType !== "all" && (
                         <span className="text-[10px] bg-navy/10 px-1.5 py-0.5 rounded font-medium">
                           {entry.listingType === "buyItNow" ? "BIN Only" : "Auction Only"}
+                        </span>
+                      )}
+                      {entry.condition && entry.condition !== "ungraded" && (
+                        <span className="text-[10px] bg-navy/10 px-1.5 py-0.5 rounded font-medium">
+                          {entry.condition === "nearMint" ? "Near Mint+" : entry.condition === "excellent" ? "Excellent" : "Graded"}
                         </span>
                       )}
                     </div>
