@@ -85,64 +85,40 @@ export async function sendCardAlertEmail(
 ): Promise<void> {
   if (!results.length) return;
 
-  const gmailAddr = process.env.GMAIL_ADDRESS;
-  const gmailPass = process.env.GMAIL_APP_PASSWORD;
-  const resendKey = process.env.RESEND_API_KEY;
+  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+  const smtpPort = parseInt(process.env.SMTP_PORT || "587");
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  const smtpFrom = process.env.SMTP_FROM || smtpUser;
 
   const subject = `CardWatch: ${results.length} new listing${results.length !== 1 ? "s" : ""} found`;
   const html = buildEmailHtml(results);
 
-  // Try Resend first
-  if (resendKey) {
-    try {
-      const resp = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "CardWatch <alerts@mycardwatch.com>",
-          to,
-          subject,
-          html,
-        }),
-      });
-      if (resp.ok) {
-        console.log(`[Email] Sent via Resend to ${to}`);
-        return;
-      }
-      console.error("Resend failed:", await resp.text());
-    } catch (e) {
-      console.error("Resend error:", e);
-    }
+  if (!smtpUser || !smtpPass) {
+    console.warn("[Email] No SMTP credentials configured (set SMTP_USER + SMTP_PASS)");
+    return;
   }
 
-  // Fallback: Gmail SMTP
-  if (gmailAddr && gmailPass) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: gmailAddr,
-          pass: gmailPass,
-        },
-      });
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
 
-      await transporter.sendMail({
-        from: `CardWatch <${gmailAddr}>`,
-        to,
-        subject,
-        html,
-      });
+    await transporter.sendMail({
+      from: `CardWatch <${smtpFrom}>`,
+      to,
+      subject,
+      html,
+    });
 
-      console.log(`[Email] Sent via Gmail to ${to}`);
-    } catch (e) {
-      console.error("[Email] Gmail send failed:", e);
-    }
-  } else {
-    console.warn("[Email] No email provider configured");
+    console.log(`[Email] Sent to ${to} via ${smtpHost}`);
+  } catch (e) {
+    console.error("[Email] Send failed:", e);
   }
 }
