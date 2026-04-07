@@ -1,36 +1,48 @@
-/**
- * Simple in-memory rate limiter for serverless.
- * Note: This resets on cold starts, so it's not perfect on serverless,
- * but it provides protection within a single invocation lifetime.
- * For stronger rate limiting, use Upstash Redis.
- */
-const attempts = new Map<string, { count: number; resetAt: number }>();
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-export function rateLimit(
-  key: string,
-  maxAttempts: number,
-  windowMs: number
-): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const entry = attempts.get(key);
+let _rateLimiter: Ratelimit | null = null;
 
-  if (!entry || now > entry.resetAt) {
-    attempts.set(key, { count: 1, resetAt: now + windowMs });
-    return { allowed: true, remaining: maxAttempts - 1 };
+function getRateLimiter(): Ratelimit | null {
+  if (_rateLimiter) return _rateLimiter;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    console.warn("[RateLimit] Upstash not configured — rate limiting disabled");
+    return null;
   }
 
-  if (entry.count >= maxAttempts) {
-    return { allowed: false, remaining: 0 };
-  }
+  _rateLimiter = new Ratelimit({
+    redis: new Redis({ url, token }),
+    limiter: Ratelimit.slidingWindow(5, "15 m"), // 5 requests per 15 minutes
+    analytics: true,
+  });
 
-  entry.count++;
-  return { allowed: true, remaining: maxAttempts - entry.count };
+  return _rateLimiter;
 }
 
-// Cleanup old entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of attempts) {
-    if (now > entry.resetAt) attempts.delete(key);
+/**
+ * Rate limit by key. Returns { allowed, remaining }.
+ * Falls back to always-allowed if Upstash is not configured.
+ */
+export async function rateLimit(
+  key: string,
+  _maxAttempts?: number,
+  _windowMs?: number
+): Promise<{ allowed: boolean; remaining: number }> {
+  const limiter = getRateLimiter();
+
+  if (!limiter) {
+    return { allowed: true, remaining: 999 };
   }
-}, 60000);
+
+  try {
+    const result = await limiter.limit(key);
+    return { allowed: result.success, remaining: result.remaining };
+  } catch (e) {
+    console.error("[RateLimit] Error:", e);
+    return { allowed: true, remaining: 999 }; // fail open
+  }
+}

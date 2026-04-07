@@ -1,22 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("verified") === "true") {
+      setSuccess("Email verified! You can now sign in.");
+    }
+    if (searchParams.get("error") === "invalid-token") {
+      setError("Verification link is invalid or expired.");
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
     if (!isLogin) {
@@ -25,9 +38,15 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name }),
       });
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         setError(data.error || "Registration failed");
+        setLoading(false);
+        return;
+      }
+      if (data.needsVerification) {
+        setError("");
+        setSuccess("Check your email! We sent a verification link to " + email);
         setLoading(false);
         return;
       }
@@ -41,7 +60,13 @@ export default function LoginPage() {
 
     setLoading(false);
     if (result?.error) {
-      setError("Invalid email or password");
+      // NextAuth passes the error message from authorize() throw
+      const msg = result.error;
+      if (msg.includes("locked") || msg.includes("verify")) {
+        setError(msg);
+      } else {
+        setError("Invalid email or password");
+      }
     } else {
       router.push("/dashboard");
     }
@@ -133,6 +158,11 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+            {success && (
+              <div className="bg-green-50 text-green-700 text-sm font-medium px-4 py-2 rounded-xl">
+                {success}
+              </div>
+            )}
             <button
               type="submit"
               disabled={loading}
@@ -161,5 +191,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

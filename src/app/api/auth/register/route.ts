@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
+import { createVerificationToken, sendVerificationEmail } from "@/lib/verification";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
   // Rate limit: 5 registrations per IP per 15 minutes
   const ip = request.headers.get("x-forwarded-for") || "unknown";
-  const { allowed } = rateLimit(`register:${ip}`, 5, 15 * 60 * 1000);
+  const { allowed } = await rateLimit(`register:${ip}`);
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },
@@ -65,5 +66,12 @@ export async function POST(request: Request) {
     data: { email: trimmedEmail, name: trimmedName, passwordHash },
   });
 
-  return NextResponse.json({ id: user.id, email: user.email }, { status: 201 });
+  // Send verification email
+  const token = await createVerificationToken(trimmedEmail);
+  await sendVerificationEmail(trimmedEmail, token);
+
+  return NextResponse.json(
+    { id: user.id, email: user.email, needsVerification: true },
+    { status: 201 }
+  );
 }

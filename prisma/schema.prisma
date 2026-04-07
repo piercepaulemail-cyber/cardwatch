@@ -8,17 +8,29 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  name          String?
-  image         String?
-  emailVerified DateTime?
-  passwordHash  String?
-  subscription  Subscription?
-  watchlist     WatchlistEntry[]
-  scanResults   ScanResult[]
-  accounts      Account[]
-  createdAt     DateTime       @default(now())
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  name                String?
+  image               String?
+  emailVerified       DateTime?
+  passwordHash        String?
+  failedLoginAttempts Int            @default(0)
+  lockedUntil         DateTime?
+  subscription        Subscription?
+  watchlist           WatchlistEntry[]
+  scanResults         ScanResult[]
+  accounts            Account[]
+  createdAt           DateTime       @default(now())
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }
 
 model Account {
