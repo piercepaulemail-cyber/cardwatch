@@ -14,64 +14,99 @@ const FAQ: { keywords: string[]; response: string }[] = [
       "CardWatch monitors eBay 24/7 for newly listed raw and ungraded sports cards. You build a watchlist of players and card types, and we alert you the moment matching cards are listed — so you can grab deals before anyone else.",
   },
   {
-    keywords: ["price", "cost", "how much", "pricing", "plan"],
+    keywords: ["price", "cost", "how much", "pricing", "plan", "plans", "subscription", "subscribe", "pay"],
     response:
-      "We offer 3 plans: Scout ($4.99/mo) scans up to every 2 hours, Pro ($14.99/mo) up to every 30 minutes, and Elite ($29.99/mo) up to every 15 minutes. All plans include a 3-day free trial. Visit our pricing page for details!",
+      "We have 3 plans:\n\n• Scout — $4.99/mo: Scan every 2h, 6h, 12h, or daily\n• Pro — $14.99/mo: Scan every 30m, 45m, 1h, plus all Scout options\n• Elite — $29.99/mo: Scan every 15 minutes, plus all options\n\nAll plans include unlimited watchlist entries, email alerts, and a 3-day free trial!",
+  },
+  {
+    keywords: ["scout"],
+    response:
+      "The Scout plan is $4.99/mo. You can scan every 2 hours, 6 hours, 12 hours, or daily. It includes unlimited watchlist entries, email alerts, and sortable results. Great for casual collectors!",
+  },
+  {
+    keywords: ["pro"],
+    response:
+      "The Pro plan is $14.99/mo. You can scan as often as every 30 minutes, plus every 45min, 1h, 2h, 6h, 12h, or daily. Includes everything in Scout with priority scanning. Perfect for active collectors!",
+  },
+  {
+    keywords: ["elite"],
+    response:
+      "The Elite plan is $29.99/mo. You get access to every scan interval including every 15 minutes — the fastest available. Includes everything in Pro, plus upcoming features like PSA grade data and strong buy scoring. Built for serious collectors and flippers!",
   },
   {
     keywords: ["trial", "free"],
     response:
-      "Yes! All plans come with a 3-day free trial. You won't be charged until the trial ends, and you can cancel anytime.",
+      "Yes! All plans come with a 3-day free trial. You won't be charged until the trial ends, and you can cancel anytime. Pick any plan to get started!",
   },
   {
-    keywords: ["scan", "how often", "frequency", "fast"],
+    keywords: ["scan", "how often", "frequency", "fast", "speed", "interval"],
     response:
-      "Scanning frequency depends on your plan — Scout scans every 3 hours, Pro every hour, and Elite every 15 minutes. You can also click 'Scan Now' on the dashboard for an on-demand scan anytime.",
+      "You choose your scan frequency from the dashboard! Options range from every 15 minutes to once daily, depending on your plan:\n\n• Scout: 2h, 6h, 12h, daily\n• Pro: 30m, 45m, 1h + Scout options\n• Elite: 15m + all options\n\nYou can also click 'Scan Now' anytime for an on-demand scan.",
   },
   {
     keywords: ["cancel", "refund", "unsubscribe"],
     response:
-      "You can cancel your subscription anytime. There are no cancellation fees. Your access continues until the end of your current billing period.",
+      "You can cancel your subscription anytime — no cancellation fees, no hassles. Your access continues until the end of your current billing period.",
   },
   {
-    keywords: ["watchlist", "add", "player", "how do i"],
+    keywords: ["watchlist", "add", "player", "how do i", "search"],
     response:
-      "From your dashboard, use the form on the left to add players. Enter the player name, card description, and optionally set min/max price filters and choose listing type (Buy It Now, Auction, or both).",
+      "From your dashboard, use the form on the left side to add players. Enter the player name, card description, and optionally set min/max price filters. You can also choose to see only Buy It Now listings, only Auctions, or both!",
   },
   {
     keywords: ["email", "notification", "alert", "notify"],
     response:
-      "When new cards matching your watchlist are found, we send you an email alert automatically with all the details and direct links to the eBay listings.",
+      "When new cards matching your watchlist are found, we automatically send you an email alert with all the details — card title, price, seller info, and a direct link to view it on eBay.",
   },
   {
     keywords: ["ebay", "listing", "buy", "purchase"],
     response:
-      "CardWatch monitors eBay for newly listed raw/ungraded sports cards. Click any result in your dashboard or email to view and purchase the listing directly on eBay.",
+      "CardWatch monitors eBay for newly listed raw/ungraded sports cards. When you find a card you want, just click the link in your dashboard or email to go straight to the eBay listing and buy it.",
   },
   {
     keywords: ["filter", "sort", "type", "auction", "buy it now", "bin"],
     response:
-      "You can filter by Buy It Now or Auction listings, set min/max prices, and sort results by price, bids, seller rating, listing type, and more from the dashboard.",
+      "You can filter your watchlist entries by Buy It Now or Auction listings, set minimum and maximum prices, and sort your results by price, bids, seller rating, listing type, and more — all from the dashboard.",
   },
   {
     keywords: ["account", "login", "sign", "register", "signup"],
     response:
-      "You can sign in with Google or create an account with email and password at mycardwatch.com/login. After signing up, pick a plan to start your free trial.",
+      "Sign in with Google or create an account with email and password at mycardwatch.com/login. After signing up, pick a plan to start your 3-day free trial!",
   },
   {
-    keywords: ["contact", "support", "help", "email us", "reach"],
+    keywords: ["contact", "support", "help", "email us", "reach", "question"],
     response:
-      "For support, email us at hello@mycardwatch.com — we're happy to help!",
+      "For support, email us at hello@mycardwatch.com — we typically respond within 24 hours!",
   },
   {
     keywords: ["graded", "psa", "bgs", "sgc", "grade"],
     response:
-      "CardWatch currently focuses on raw/ungraded cards. PSA grade data and scoring features are coming soon for Elite tier subscribers!",
+      "CardWatch currently focuses on raw/ungraded cards. PSA grade data and strong buy scoring features are coming soon for Elite tier subscribers — stay tuned!",
   },
   {
     keywords: ["safe", "secure", "privacy", "data"],
     response:
       "Your data is secure. We use industry-standard encryption and never share your personal information with third parties. Payments are processed securely through Stripe.",
+  },
+  {
+    keywords: ["upgrade", "change plan", "switch", "downgrade"],
+    response:
+      "You can upgrade or downgrade your plan anytime. Changes take effect immediately — upgrading gives you instant access to faster scan intervals!",
+  },
+  {
+    keywords: ["raw", "ungraded", "condition"],
+    response:
+      "CardWatch specifically monitors for raw (ungraded) cards. We filter eBay listings to only show ungraded condition cards, so you don't have to sift through graded or slabbed listings.",
+  },
+  {
+    keywords: ["sport", "football", "basketball", "baseball", "hockey"],
+    response:
+      "CardWatch works for all sports! Football, basketball, baseball, hockey — any sports trading card listed on eBay. Just add the player name and card description to your watchlist.",
+  },
+  {
+    keywords: ["remove", "delete", "dismiss"],
+    response:
+      "You can remove results from your Recent Finds by clicking the X button on any listing. You can also remove players from your watchlist by clicking the X next to their name.",
   },
 ];
 
@@ -184,7 +219,12 @@ export default function ChatWidget() {
                       : "bg-navy text-white rounded-2xl rounded-tr-md"
                   }`}
                 >
-                  {msg.text}
+                  {msg.text.split("\n").map((line, j) => (
+                    <span key={j}>
+                      {line}
+                      {j < msg.text.split("\n").length - 1 && <br />}
+                    </span>
+                  ))}
                 </div>
               </div>
             ))}
