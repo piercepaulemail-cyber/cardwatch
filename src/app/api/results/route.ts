@@ -44,3 +44,20 @@ export async function GET(request: NextRequest) {
     totalPages: Math.ceil(total / limit),
   });
 }
+
+export async function DELETE(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await request.json();
+
+  const result = await prisma.scanResult.findUnique({ where: { id } });
+  if (!result || result.userId !== session.user.id) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  await prisma.scanResult.delete({ where: { id } });
+  return NextResponse.json({ success: true });
+}

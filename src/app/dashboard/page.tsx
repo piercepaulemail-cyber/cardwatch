@@ -126,6 +126,16 @@ export default function DashboardPage() {
     loadWatchlist();
   }
 
+  async function dismissResult(id: string) {
+    await fetch("/api/results", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setResults((prev) => prev.filter((r) => r.id !== id));
+    setTotalResults((prev) => prev - 1);
+  }
+
   async function triggerScan() {
     setScanning(true);
     setScanMessage("");
@@ -385,13 +395,14 @@ export default function DashboardPage() {
                         <SortIndicator column={col.key} />
                       </th>
                     ))}
+                    <th className="w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {results.length === 0 && (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={8}
                         className="text-center py-16 text-muted-foreground"
                       >
                         No results yet. Add players to your watchlist and run a
@@ -442,6 +453,15 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                         {timeAgo(r.listingStartTime)}
+                      </td>
+                      <td className="px-2 py-3">
+                        <button
+                          onClick={() => dismissResult(r.id)}
+                          className="text-muted-foreground/40 hover:text-destructive transition p-1"
+                          title="Dismiss"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                       </td>
                     </tr>
                   ))}
