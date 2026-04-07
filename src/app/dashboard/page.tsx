@@ -146,7 +146,7 @@ export default function DashboardPage() {
 
   function SortIndicator({ column }: { column: string }) {
     if (sortBy !== column)
-      return <span className="text-muted-foreground/30 ml-1">&udarr;</span>;
+      return <span className="text-muted-foreground/30 ml-1">{"\u21C5"}</span>;
     return (
       <span className="text-navy ml-1">
         {sortOrder === "asc" ? "\u25B2" : "\u25BC"}
