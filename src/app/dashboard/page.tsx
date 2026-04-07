@@ -64,16 +64,32 @@ export default function DashboardPage() {
     if (res.ok) setWatchlist(await res.json());
   }, []);
 
+  const [subChecked, setSubChecked] = useState(false);
+
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
 
+  // Check subscription — redirect to pricing if none
   useEffect(() => {
-    if (session?.user) {
+    if (!session?.user) return;
+    fetch("/api/subscription")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.active) {
+          router.push("/pricing");
+        } else {
+          setSubChecked(true);
+        }
+      });
+  }, [session, router]);
+
+  useEffect(() => {
+    if (session?.user && subChecked) {
       loadWatchlist();
       loadResults();
     }
-  }, [session, loadWatchlist, loadResults]);
+  }, [session, subChecked, loadWatchlist, loadResults]);
 
   async function addEntry(e: React.FormEvent) {
     e.preventDefault();
