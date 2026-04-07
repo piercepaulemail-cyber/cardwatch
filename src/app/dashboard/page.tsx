@@ -237,15 +237,41 @@ export default function DashboardPage() {
                 placeholder="Min price (optional)"
                 className="w-full px-3 py-2.5 rounded-lg border border-border text-sm focus:border-navy focus:outline-none transition"
               />
-              <select
-                value={listingType}
-                onChange={(e) => setListingType(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border text-sm focus:border-navy focus:outline-none transition bg-white"
-              >
-                <option value="all">All Listing Types</option>
-                <option value="buyItNow">Buy It Now Only</option>
-                <option value="auction">Auction Only</option>
-              </select>
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">Listing Type</p>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={listingType === "all" || listingType === "buyItNow"}
+                    onChange={(e) => {
+                      const auctionOn = listingType === "all" || listingType === "auction";
+                      if (e.target.checked) {
+                        setListingType(auctionOn ? "all" : "buyItNow");
+                      } else {
+                        setListingType(auctionOn ? "auction" : "all");
+                      }
+                    }}
+                    className="w-4 h-4 rounded border-border accent-navy"
+                  />
+                  <span className="text-sm">Buy It Now</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={listingType === "all" || listingType === "auction"}
+                    onChange={(e) => {
+                      const binOn = listingType === "all" || listingType === "buyItNow";
+                      if (e.target.checked) {
+                        setListingType(binOn ? "all" : "auction");
+                      } else {
+                        setListingType(binOn ? "buyItNow" : "all");
+                      }
+                    }}
+                    className="w-4 h-4 rounded border-border accent-navy"
+                  />
+                  <span className="text-sm">Auction</span>
+                </label>
+              </div>
               <button
                 type="submit"
                 className="w-full bg-navy text-white font-semibold py-2.5 rounded-lg hover:bg-navy-light transition text-sm"
