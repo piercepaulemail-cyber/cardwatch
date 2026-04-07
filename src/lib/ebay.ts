@@ -3,6 +3,25 @@ import { prisma } from "./db";
 const BROWSE_API_ENDPOINT =
   "https://api.ebay.com/buy/browse/v1/item_summary/search";
 const TOKEN_ENDPOINT = "https://api.ebay.com/identity/v1/oauth2/token";
+const EPN_CAMPAIGN_ID = "5339148344";
+
+/**
+ * Append EPN affiliate tracking parameters to an eBay item URL.
+ */
+export function toAffiliateUrl(ebayUrl: string): string {
+  if (!ebayUrl) return ebayUrl;
+  try {
+    const url = new URL(ebayUrl);
+    url.searchParams.set("mkcid", "1");           // eBay Partner Network
+    url.searchParams.set("mkrid", "711-53200-19255-0"); // US marketplace
+    url.searchParams.set("campid", EPN_CAMPAIGN_ID);
+    url.searchParams.set("toolid", "10001");
+    url.searchParams.set("customid", "cardwatch");
+    return url.toString();
+  } catch {
+    return ebayUrl;
+  }
+}
 const SPORTS_CARDS_CATEGORY = "261328";
 const CONDITION_UNGRADED = "4000";
 const CACHE_TTL_MINUTES = 15;
@@ -204,7 +223,7 @@ async function searchEbayRaw(
       bidCount: item.bidCount || 0,
       sellerName: item.seller?.username || "",
       sellerFeedback: item.seller?.feedbackScore || 0,
-      itemUrl: item.itemWebUrl || "",
+      itemUrl: toAffiliateUrl(item.itemWebUrl || ""),
       imageUrl: item.image?.imageUrl || "",
       listingStartTime: new Date(originDate || Date.now()),
       matchedPlayer: playerName,
