@@ -16,7 +16,7 @@ const FAQ: { keywords: string[]; response: string }[] = [
   {
     keywords: ["price", "cost", "how much", "pricing", "plan"],
     response:
-      "We offer 3 plans: Scout ($29.99/mo) scans every 3 hours, Pro ($49.99/mo) scans every hour, and Elite ($99.99/mo) scans every 15 minutes. All plans include a 3-day free trial. Visit our pricing page for details!",
+      "We offer 3 plans: Scout ($4.99/mo) scans up to every 2 hours, Pro ($14.99/mo) up to every 30 minutes, and Elite ($29.99/mo) up to every 15 minutes. All plans include a 3-day free trial. Visit our pricing page for details!",
   },
   {
     keywords: ["trial", "free"],

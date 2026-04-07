@@ -9,10 +9,10 @@ const tiers = [
   {
     key: "scout",
     name: "Scout",
-    price: "$29.99",
-    interval: "Every 3 hours",
+    price: "$4.99",
+    interval: "Up to every 2 hours",
     features: [
-      "Scan every 3 hours",
+      "Choose: every 2h, 6h, 12h, or daily",
       "Unlimited watchlist entries",
       "Email alerts for new listings",
       "Sortable results table",
@@ -21,11 +21,11 @@ const tiers = [
   {
     key: "pro",
     name: "Pro",
-    price: "$49.99",
-    interval: "Every hour",
+    price: "$14.99",
+    interval: "Up to every 30 min",
     popular: true,
     features: [
-      "Scan every hour",
+      "Choose: every 30m, 45m, 1h, 2h, 6h, 12h, daily",
       "Everything in Scout",
       "Priority scanning",
       "Faster alerts",
@@ -34,10 +34,10 @@ const tiers = [
   {
     key: "elite",
     name: "Elite",
-    price: "$99.99",
-    interval: "Every 15 min",
+    price: "$29.99",
+    interval: "Up to every 15 min",
     features: [
-      "Scan every 15 minutes",
+      "All scan intervals including every 15 min",
       "Everything in Pro",
       "PSA grade data (coming soon)",
       "Strong buy scoring (coming soon)",

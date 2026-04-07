@@ -69,6 +69,8 @@ export default function DashboardPage() {
   }, []);
 
   const [subChecked, setSubChecked] = useState(false);
+  const [userTier, setUserTier] = useState("");
+  const [currentInterval, setCurrentInterval] = useState(0);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -84,6 +86,8 @@ export default function DashboardPage() {
           router.push("/pricing");
         } else {
           setSubChecked(true);
+          setUserTier(data.tier);
+          setCurrentInterval(data.scanIntervalMinutes);
         }
       });
   }, [session, router]);
@@ -349,6 +353,60 @@ export default function DashboardPage() {
 
         {/* Right: Results */}
         <main className="flex-1 p-5 overflow-auto">
+          {/* Scan interval selector */}
+          {userTier && (
+            <div className="bg-white rounded-xl border border-border p-4 mb-5 shadow-sm">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                Scan Frequency
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: "15 min", minutes: 15, minTier: "elite" },
+                  { label: "30 min", minutes: 30, minTier: "pro" },
+                  { label: "45 min", minutes: 45, minTier: "pro" },
+                  { label: "1 hour", minutes: 60, minTier: "pro" },
+                  { label: "2 hours", minutes: 120, minTier: "scout" },
+                  { label: "6 hours", minutes: 360, minTier: "scout" },
+                  { label: "12 hours", minutes: 720, minTier: "scout" },
+                  { label: "Daily", minutes: 1440, minTier: "scout" },
+                ].map((opt) => {
+                  const tierRank: Record<string, number> = { scout: 1, pro: 2, elite: 3 };
+                  const locked = (tierRank[userTier] || 0) < (tierRank[opt.minTier] || 0);
+                  const active = currentInterval === opt.minutes;
+                  return (
+                    <button
+                      key={opt.minutes}
+                      disabled={locked}
+                      onClick={async () => {
+                        if (locked || active) return;
+                        const res = await fetch("/api/subscription", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ scanIntervalMinutes: opt.minutes }),
+                        });
+                        if (res.ok) setCurrentInterval(opt.minutes);
+                      }}
+                      className={`relative px-3.5 py-2 rounded-lg text-xs font-semibold transition ${
+                        active
+                          ? "bg-navy text-white"
+                          : locked
+                            ? "bg-secondary text-muted-foreground/40 cursor-not-allowed"
+                            : "bg-secondary text-navy hover:bg-navy hover:text-white"
+                      }`}
+                    >
+                      {opt.label}
+                      {locked && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-navy text-white text-[8px] font-bold px-1 py-0.5 rounded leading-none">
+                          {opt.minTier === "pro" ? "PRO" : "ELITE"}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
             <div>
               <h2 className="text-xl font-bold text-navy">
