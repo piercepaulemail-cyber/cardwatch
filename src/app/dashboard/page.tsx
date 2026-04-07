@@ -73,6 +73,9 @@ export default function DashboardPage() {
   const [subChecked, setSubChecked] = useState(false);
   const [userTier, setUserTier] = useState("");
   const [currentInterval, setCurrentInterval] = useState(0);
+  const [showIntervalConfirm, setShowIntervalConfirm] = useState(false);
+  const [pendingInterval, setPendingInterval] = useState(0);
+  const [pendingIntervalLabel, setPendingIntervalLabel] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -407,14 +410,11 @@ export default function DashboardPage() {
                     <button
                       key={opt.minutes}
                       disabled={locked}
-                      onClick={async () => {
+                      onClick={() => {
                         if (locked || active) return;
-                        const res = await fetch("/api/subscription", {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ scanIntervalMinutes: opt.minutes }),
-                        });
-                        if (res.ok) setCurrentInterval(opt.minutes);
+                        setPendingInterval(opt.minutes);
+                        setPendingIntervalLabel(opt.label);
+                        setShowIntervalConfirm(true);
                       }}
                       className={`relative px-3.5 py-2 rounded-lg text-xs font-semibold transition ${
                         active
@@ -581,6 +581,43 @@ export default function DashboardPage() {
           )}
         </main>
       </div>
+
+      {/* Scan frequency confirmation modal */}
+      {showIntervalConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            <h3 className="text-lg font-bold text-navy mb-2">
+              Change scan frequency?
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Your scans will run <strong className="text-navy">{pendingIntervalLabel}</strong>.
+              This takes effect immediately.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowIntervalConfirm(false)}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border text-sm font-semibold text-navy hover:bg-secondary transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const res = await fetch("/api/subscription", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ scanIntervalMinutes: pendingInterval }),
+                  });
+                  if (res.ok) setCurrentInterval(pendingInterval);
+                  setShowIntervalConfirm(false);
+                }}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-navy text-white text-sm font-semibold hover:bg-navy-light transition"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
