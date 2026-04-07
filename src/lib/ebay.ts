@@ -47,6 +47,8 @@ export interface EbaySearchQuery {
   playerName: string;
   cardDescription: string;
   maxPrice?: number | null;
+  minPrice?: number | null;
+  listingType?: string | null; // "all", "buyItNow", "auction"
 }
 
 export interface EbayResult {
@@ -227,10 +229,22 @@ export async function searchEbay(
     lookbackMinutes
   );
 
-  // Apply per-user maxPrice filter after cache
-  const filtered = query.maxPrice
-    ? results.filter((r) => r.currentPrice <= query.maxPrice!)
-    : results;
+  // Apply per-user filters after cache
+  let filtered = results;
+
+  if (query.maxPrice) {
+    filtered = filtered.filter((r) => r.currentPrice <= query.maxPrice!);
+  }
+  if (query.minPrice) {
+    filtered = filtered.filter((r) => r.currentPrice >= query.minPrice!);
+  }
+  if (query.listingType && query.listingType !== "all") {
+    if (query.listingType === "buyItNow") {
+      filtered = filtered.filter((r) => r.listingType === "FixedPrice");
+    } else if (query.listingType === "auction") {
+      filtered = filtered.filter((r) => r.listingType === "Auction");
+    }
+  }
 
   return { results: filtered, fromCache };
 }

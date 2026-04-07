@@ -60,6 +60,8 @@ model WatchlistEntry {
   playerName      String
   cardDescription String
   maxPrice        Float?
+  minPrice        Float?
+  listingType     String?   // "all", "buyItNow", "auction"
   notes           String?
   createdAt       DateTime @default(now())
 }

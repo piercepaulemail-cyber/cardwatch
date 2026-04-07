@@ -10,6 +10,8 @@ interface WatchlistEntry {
   playerName: string;
   cardDescription: string;
   maxPrice: number | null;
+  minPrice: number | null;
+  listingType: string | null;
 }
 
 interface ScanResult {
@@ -46,6 +48,8 @@ export default function DashboardPage() {
   const [playerName, setPlayerName] = useState("");
   const [cardDesc, setCardDesc] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [listingType, setListingType] = useState("all");
 
   const loadResults = useCallback(async () => {
     const res = await fetch(
@@ -101,11 +105,15 @@ export default function DashboardPage() {
         playerName,
         cardDescription: cardDesc,
         maxPrice: maxPrice || null,
+        minPrice: minPrice || null,
+        listingType,
       }),
     });
     setPlayerName("");
     setCardDesc("");
     setMaxPrice("");
+    setMinPrice("");
+    setListingType("all");
     loadWatchlist();
   }
 
@@ -221,6 +229,23 @@ export default function DashboardPage() {
                 placeholder="Max price (optional)"
                 className="w-full px-3 py-2.5 rounded-lg border border-border text-sm focus:border-navy focus:outline-none transition"
               />
+              <input
+                type="number"
+                step="0.01"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                placeholder="Min price (optional)"
+                className="w-full px-3 py-2.5 rounded-lg border border-border text-sm focus:border-navy focus:outline-none transition"
+              />
+              <select
+                value={listingType}
+                onChange={(e) => setListingType(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-lg border border-border text-sm focus:border-navy focus:outline-none transition bg-white"
+              >
+                <option value="all">All Listing Types</option>
+                <option value="buyItNow">Buy It Now Only</option>
+                <option value="auction">Auction Only</option>
+              </select>
               <button
                 type="submit"
                 className="w-full bg-navy text-white font-semibold py-2.5 rounded-lg hover:bg-navy-light transition text-sm"
@@ -256,11 +281,23 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground truncate">
                       {entry.cardDescription}
                     </p>
-                    {entry.maxPrice && (
-                      <p className="text-xs text-navy font-semibold mt-0.5">
-                        Max: ${entry.maxPrice}
-                      </p>
-                    )}
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {entry.minPrice && (
+                        <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-medium">
+                          Min: ${entry.minPrice}
+                        </span>
+                      )}
+                      {entry.maxPrice && (
+                        <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-medium">
+                          Max: ${entry.maxPrice}
+                        </span>
+                      )}
+                      {entry.listingType && entry.listingType !== "all" && (
+                        <span className="text-[10px] bg-navy/10 px-1.5 py-0.5 rounded font-medium">
+                          {entry.listingType === "buyItNow" ? "BIN Only" : "Auction Only"}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <button
                     className="text-muted-foreground hover:text-destructive ml-2 shrink-0 transition"

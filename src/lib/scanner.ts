@@ -24,6 +24,8 @@ export async function scanForUser(userId: string, lookbackMinutes: number) {
     playerName: e.playerName,
     cardDescription: e.cardDescription,
     maxPrice: e.maxPrice,
+    minPrice: e.minPrice,
+    listingType: e.listingType,
   }));
 
   const results = await runUserScan(queries, lookbackMinutes);

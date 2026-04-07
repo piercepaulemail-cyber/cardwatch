@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { playerName, cardDescription, maxPrice, notes } =
+  const { playerName, cardDescription, maxPrice, minPrice, listingType, notes } =
     await request.json();
 
   if (!playerName || !cardDescription) {
@@ -38,6 +38,8 @@ export async function POST(request: Request) {
       playerName: playerName.trim(),
       cardDescription: cardDescription.trim(),
       maxPrice: maxPrice ? parseFloat(maxPrice) : null,
+      minPrice: minPrice ? parseFloat(minPrice) : null,
+      listingType: listingType || "all",
       notes: notes || null,
     },
   });
