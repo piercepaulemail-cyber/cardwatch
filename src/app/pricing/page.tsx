@@ -9,7 +9,10 @@ const tiers = [
   {
     key: "scout",
     name: "Scout",
-    price: "$4.99",
+    originalPrice: "$8.99",
+    monthlyPrice: "$4.99",
+    annualMonthly: "$3.99",
+    annualTotal: "$47.88",
     interval: "Up to every 2 hours",
     features: [
       "Choose: every 2h, 6h, 12h, or daily",
@@ -21,7 +24,10 @@ const tiers = [
   {
     key: "pro",
     name: "Pro",
-    price: "$14.99",
+    originalPrice: "$24.99",
+    monthlyPrice: "$14.99",
+    annualMonthly: "$11.99",
+    annualTotal: "$143.88",
     interval: "Up to every 30 min",
     popular: true,
     features: [
@@ -34,7 +40,10 @@ const tiers = [
   {
     key: "elite",
     name: "Elite",
-    price: "$29.99",
+    originalPrice: "$49.99",
+    monthlyPrice: "$29.99",
+    annualMonthly: "$23.99",
+    annualTotal: "$287.88",
     interval: "Up to every 15 min",
     features: [
       "All scan intervals including every 15 min",
@@ -49,6 +58,7 @@ export default function PricingPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const [annual, setAnnual] = useState(false);
 
   async function handleSubscribe(tier: string) {
     if (!session) {
@@ -59,7 +69,7 @@ export default function PricingPage() {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tier }),
+      body: JSON.stringify({ tier, annual }),
     });
     const data = await res.json();
     setLoading(null);
@@ -98,11 +108,34 @@ export default function PricingPage() {
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
             Choose your scanning speed
           </h1>
-          <p className="text-white/60 text-lg">
+          <p className="text-white/60 text-lg mb-8">
             All plans include a{" "}
             <span className="text-white font-semibold">3-day free trial</span>.
             Cancel anytime.
           </p>
+
+          {/* Monthly / Annual toggle */}
+          <div className="inline-flex items-center bg-white/10 rounded-full p-1">
+            <button
+              onClick={() => setAnnual(false)}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
+                !annual ? "bg-white text-navy" : "text-white/70 hover:text-white"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setAnnual(true)}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${
+                annual ? "bg-white text-navy" : "text-white/70 hover:text-white"
+              }`}
+            >
+              Annual
+              <span className="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                SAVE 20%
+              </span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -119,20 +152,41 @@ export default function PricingPage() {
               } p-8 flex flex-col`}
             >
               {tier.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-navy font-bold px-4 py-1 rounded-full text-xs">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-navy text-white font-bold px-4 py-1 rounded-full text-xs">
                   Most Popular
                 </div>
               )}
+
+              {/* 40% off badge */}
+              <div className="absolute -top-3 -right-3 bg-green-500 text-white font-bold px-2.5 py-1 rounded-full text-[10px]">
+                40% OFF
+              </div>
+
               <h3 className="text-lg font-bold text-navy">{tier.name}</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 {tier.interval}
               </p>
+
+              {/* Price display */}
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-navy">
-                  {tier.price}
-                </span>
-                <span className="text-muted-foreground">/mo</span>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-lg text-muted-foreground line-through">
+                    {tier.originalPrice}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-extrabold text-navy">
+                    {annual ? tier.annualMonthly : tier.monthlyPrice}
+                  </span>
+                  <span className="text-muted-foreground">/mo</span>
+                </div>
+                {annual && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Billed {tier.annualTotal}/year
+                  </p>
+                )}
               </div>
+
               <ul className="space-y-3 mb-8 flex-1">
                 {tier.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm">
@@ -156,7 +210,7 @@ export default function PricingPage() {
               <button
                 className={`w-full py-3 rounded-full font-semibold text-sm transition ${
                   tier.popular
-                    ? "bg-white text-navy hover:bg-silver-light"
+                    ? "bg-navy text-white hover:bg-navy-light"
                     : "bg-navy text-white hover:bg-navy-light"
                 }`}
                 disabled={loading === tier.key}
