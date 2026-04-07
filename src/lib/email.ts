@@ -1,12 +1,30 @@
 import nodemailer from "nodemailer";
 import type { EbayResult } from "./ebay";
 
+function esc(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function safeUrl(url: string): string {
+  if (!url) return "#";
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "https:" || parsed.protocol === "http:") return url;
+  } catch { /* invalid URL */ }
+  return "#";
+}
+
 function buildEmailHtml(results: EbayResult[]): string {
   const cards = results
     .map(
       (r) => `
       <div style="background:#FFFFFF;border:1px solid #E5E8ED;border-radius:8px;padding:16px;margin-bottom:12px;">
-        <a href="${r.itemUrl}" style="color:#0B1D3A;font-size:15px;font-weight:700;text-decoration:none;line-height:1.4;display:block;margin-bottom:12px;">${r.title}</a>
+        <a href="${safeUrl(r.itemUrl)}" style="color:#0B1D3A;font-size:15px;font-weight:700;text-decoration:none;line-height:1.4;display:block;margin-bottom:12px;">${esc(r.title)}</a>
         <table style="width:100%;font-size:13px;color:#6B7A8D;" cellpadding="0" cellspacing="0">
           <tr>
             <td style="padding:4px 0;width:50%;">
@@ -21,7 +39,7 @@ function buildEmailHtml(results: EbayResult[]): string {
           <tr>
             <td style="padding:8px 0 4px 0;">
               <span style="color:#6B7A8D;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Seller</span><br/>
-              <span style="color:#0B1D3A;font-weight:600;font-size:13px;">${r.sellerName}</span>
+              <span style="color:#0B1D3A;font-weight:600;font-size:13px;">${esc(r.sellerName)}</span>
               <span style="color:#6B7A8D;font-size:12px;"> (${r.sellerFeedback})</span>
             </td>
             <td style="padding:8px 0 4px 0;">
@@ -32,12 +50,12 @@ function buildEmailHtml(results: EbayResult[]): string {
           <tr>
             <td colspan="2" style="padding:8px 0 0 0;">
               <span style="color:#6B7A8D;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Matched</span><br/>
-              <span style="color:#0B1D3A;font-weight:600;font-size:13px;">${r.matchedPlayer} — ${r.matchedDesc}</span>
+              <span style="color:#0B1D3A;font-weight:600;font-size:13px;">${esc(r.matchedPlayer)} — ${esc(r.matchedDesc)}</span>
             </td>
           </tr>
         </table>
         <div style="margin-top:12px;">
-          <a href="${r.itemUrl}" style="display:inline-block;background:#0B1D3A;color:#FFFFFF;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">View on eBay &rarr;</a>
+          <a href="${safeUrl(r.itemUrl)}" style="display:inline-block;background:#0B1D3A;color:#FFFFFF;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">View on eBay &rarr;</a>
         </div>
       </div>`
     )

@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireSubscription } from "@/lib/require-subscription";
 
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const sub = await requireSubscription(session.user.id);
+  if (!sub) {
+    return NextResponse.json({ error: "Active subscription required" }, { status: 403 });
   }
 
   const entries = await prisma.watchlistEntry.findMany({
@@ -22,6 +28,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const sub = await requireSubscription(session.user.id);
+  if (!sub) {
+    return NextResponse.json({ error: "Active subscription required" }, { status: 403 });
+  }
+
   const { playerName, cardDescription, maxPrice, minPrice, listingType, notes } =
     await request.json();
 
@@ -32,15 +43,22 @@ export async function POST(request: Request) {
     );
   }
 
+  // Input validation
+  const trimmedPlayer = String(playerName).trim().slice(0, 200);
+  const trimmedDesc = String(cardDescription).trim().slice(0, 200);
+  if (!trimmedPlayer || !trimmedDesc) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
   const entry = await prisma.watchlistEntry.create({
     data: {
       userId: session.user.id,
-      playerName: playerName.trim(),
-      cardDescription: cardDescription.trim(),
+      playerName: trimmedPlayer,
+      cardDescription: trimmedDesc,
       maxPrice: maxPrice ? parseFloat(maxPrice) : null,
       minPrice: minPrice ? parseFloat(minPrice) : null,
-      listingType: listingType || "all",
-      notes: notes || null,
+      listingType: ["all", "buyItNow", "auction"].includes(listingType) ? listingType : "all",
+      notes: notes ? String(notes).slice(0, 500) : null,
     },
   });
 
@@ -51,6 +69,11 @@ export async function DELETE(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const sub = await requireSubscription(session.user.id);
+  if (!sub) {
+    return NextResponse.json({ error: "Active subscription required" }, { status: 403 });
   }
 
   const { id } = await request.json();

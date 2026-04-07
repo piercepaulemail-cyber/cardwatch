@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireSubscription } from "@/lib/require-subscription";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const sub = await requireSubscription(session.user.id);
+  if (!sub) {
+    return NextResponse.json({ error: "Active subscription required" }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);
