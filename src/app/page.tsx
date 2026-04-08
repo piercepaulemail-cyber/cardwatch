@@ -31,39 +31,141 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="bg-navy text-white">
-        <div className="max-w-6xl mx-auto px-6 py-20 md:py-28">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-6">
-              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-              <span className="text-sm text-white/80">Scanning eBay right now</span>
+      <section className="bg-navy text-white overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 py-20 md:py-24">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: Copy */}
+            <div>
+              <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-6">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                <span className="text-sm text-white/80">Scanning eBay right now</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6">
+                The card you want
+                <br />
+                was just listed.
+                <br />
+                <span className="text-white/60">Did you see it?</span>
+              </h1>
+              <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed max-w-lg">
+                CardWatch scans eBay every 15 minutes for the exact cards you want — raw, graded, any sport.
+                Get alerted before other collectors even open the app.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/pricing"
+                  className="bg-white text-navy font-bold px-8 py-4 rounded-full text-lg hover:bg-silver-light transition inline-flex items-center gap-2"
+                >
+                  Start free trial &rarr;
+                </Link>
+                <Link
+                  href="/login"
+                  className="border border-white/20 text-white font-semibold px-8 py-4 rounded-full text-lg hover:bg-white/5 transition text-center"
+                >
+                  Sign in
+                </Link>
+              </div>
+              <p className="text-white/40 text-sm mt-4">3-day free trial. Cancel anytime. Plans start at $4.99/mo.</p>
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight mb-6">
-              The card you want
-              <br />
-              was just listed.
-              <br />
-              <span className="text-white/60">Did you see it?</span>
-            </h1>
-            <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed max-w-lg">
-              CardWatch scans eBay every 15 minutes for the exact cards you want — raw, graded, any sport.
-              Get alerted before other collectors even open the app.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/pricing"
-                className="bg-white text-navy font-bold px-8 py-4 rounded-full text-lg hover:bg-silver-light transition inline-flex items-center gap-2"
-              >
-                Start free trial &rarr;
-              </Link>
-              <Link
-                href="/login"
-                className="border border-white/20 text-white font-semibold px-8 py-4 rounded-full text-lg hover:bg-white/5 transition text-center"
-              >
-                Sign in
-              </Link>
+
+            {/* Right: Product mockup */}
+            <div className="hidden md:block relative">
+              {/* Main dashboard card */}
+              <div className="bg-white rounded-2xl shadow-2xl shadow-black/30 overflow-hidden transform rotate-1 relative z-10">
+                {/* Mini nav */}
+                <div className="bg-[#0B1D3A] px-4 py-2.5 flex items-center justify-between">
+                  <span className="text-white text-xs font-bold">CardWatch Dashboard</span>
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                  </div>
+                </div>
+                {/* Table header */}
+                <div className="bg-[#0B1D3A] px-4 py-2 flex gap-4 text-[10px] text-white/60 uppercase tracking-wider font-semibold">
+                  <span className="flex-1">Card</span>
+                  <span className="w-16">Price</span>
+                  <span className="w-14">Type</span>
+                  <span className="w-20">Seller</span>
+                </div>
+                {/* Result rows */}
+                <div className="divide-y divide-gray-100">
+                  <div className="px-4 py-3 flex gap-4 items-center text-xs bg-white">
+                    <span className="flex-1 font-semibold text-[#0B1D3A] truncate">2025 Prizm Silver Jaxson Dart RC #332</span>
+                    <span className="w-16 font-bold text-green-600">$12.99</span>
+                    <span className="w-14"><span className="bg-[#0B1D3A]/10 text-[#0B1D3A] px-1.5 py-0.5 rounded text-[10px] font-semibold">BIN</span></span>
+                    <span className="w-20 text-gray-500 truncate">cardpro99</span>
+                  </div>
+                  <div className="px-4 py-3 flex gap-4 items-center text-xs bg-gray-50">
+                    <span className="flex-1 font-semibold text-[#0B1D3A] truncate">Cooper Flagg 2025 Topps Chrome X-Fractor</span>
+                    <span className="w-16 font-bold text-green-600">$499.99</span>
+                    <span className="w-14"><span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-semibold">BID</span></span>
+                    <span className="w-20 text-gray-500 truncate">lincoln-lou</span>
+                  </div>
+                  <div className="px-4 py-3 flex gap-4 items-center text-xs bg-white">
+                    <span className="flex-1 font-semibold text-[#0B1D3A] truncate">Wemby 2024 Mosaic Reactive Blue PSA 10</span>
+                    <span className="w-16 font-bold text-green-600">$89.00</span>
+                    <span className="w-14"><span className="bg-[#0B1D3A]/10 text-[#0B1D3A] px-1.5 py-0.5 rounded text-[10px] font-semibold">BIN</span></span>
+                    <span className="w-20 text-gray-500 truncate">sportsking</span>
+                  </div>
+                  <div className="px-4 py-3 flex gap-4 items-center text-xs bg-gray-50">
+                    <span className="flex-1 font-semibold text-[#0B1D3A] truncate">Caleb Williams Optic Rated Rookie Holo</span>
+                    <span className="w-16 font-bold text-green-600">$34.50</span>
+                    <span className="w-14"><span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-semibold">BID</span></span>
+                    <span className="w-20 text-gray-500 truncate">ripz_cards</span>
+                  </div>
+                  <div className="px-4 py-3 flex gap-4 items-center text-xs bg-white">
+                    <span className="flex-1 font-semibold text-[#0B1D3A] truncate">Jayden Daniels Prizm Purple Pulsar /75</span>
+                    <span className="w-16 font-bold text-green-600">$142.00</span>
+                    <span className="w-14"><span className="bg-[#0B1D3A]/10 text-[#0B1D3A] px-1.5 py-0.5 rounded text-[10px] font-semibold">BIN</span></span>
+                    <span className="w-20 text-gray-500 truncate">hobbybox22</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating email alert card */}
+              <div className="absolute -bottom-4 -left-8 bg-white rounded-xl shadow-xl shadow-black/20 p-3.5 w-64 transform -rotate-3 z-20 border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 bg-[#0B1D3A] rounded-lg flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-[#0B1D3A]">CardWatch Alert</p>
+                    <p className="text-[9px] text-gray-400">Just now</p>
+                  </div>
+                </div>
+                <p className="text-[11px] font-semibold text-[#0B1D3A] mb-1">3 new listings found!</p>
+                <p className="text-[10px] text-gray-500">Jaxson Dart Prizm Silver — $12.99</p>
+                <div className="mt-2 bg-[#0B1D3A] text-white text-[9px] font-semibold px-2.5 py-1 rounded inline-block">
+                  View on eBay &rarr;
+                </div>
+              </div>
+
+              {/* Floating scan status pill */}
+              <div className="absolute -top-2 -right-4 bg-white rounded-full shadow-lg shadow-black/15 px-4 py-2 flex items-center gap-2 z-20">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                <span className="text-[11px] font-semibold text-[#0B1D3A]">Scan complete — 5 found</span>
+              </div>
+
+              {/* Floating watchlist card */}
+              <div className="absolute top-12 -right-6 bg-white rounded-xl shadow-lg shadow-black/15 p-3 w-48 transform rotate-2 z-20 border border-gray-100">
+                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-2">Watchlist</p>
+                <div className="space-y-1.5">
+                  <div className="bg-gray-50 rounded px-2 py-1.5">
+                    <p className="text-[10px] font-bold text-[#0B1D3A]">Jaxson Dart</p>
+                    <p className="text-[9px] text-gray-400">Prizm Silver</p>
+                  </div>
+                  <div className="bg-gray-50 rounded px-2 py-1.5">
+                    <p className="text-[10px] font-bold text-[#0B1D3A]">Cooper Flagg</p>
+                    <p className="text-[9px] text-gray-400">Topps Chrome X-Fractor</p>
+                  </div>
+                  <div className="bg-gray-50 rounded px-2 py-1.5">
+                    <p className="text-[10px] font-bold text-[#0B1D3A]">Wemby</p>
+                    <p className="text-[9px] text-gray-400">Mosaic PSA 10</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="text-white/40 text-sm mt-4">3-day free trial. Cancel anytime. Plans start at $4.99/mo.</p>
           </div>
         </div>
       </section>
