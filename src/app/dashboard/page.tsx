@@ -76,6 +76,7 @@ export default function DashboardPage() {
   const [showIntervalConfirm, setShowIntervalConfirm] = useState(false);
   const [pendingInterval, setPendingInterval] = useState(0);
   const [pendingIntervalLabel, setPendingIntervalLabel] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -145,6 +146,36 @@ export default function DashboardPage() {
     });
     setResults((prev) => prev.filter((r) => r.id !== id));
     setTotalResults((prev) => prev - 1);
+    setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+  }
+
+  async function deleteSelected() {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    await fetch("/api/results", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    setResults((prev) => prev.filter((r) => !selectedIds.has(r.id)));
+    setTotalResults((prev) => prev - selectedIds.size);
+    setSelectedIds(new Set());
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === results.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(results.map((r) => r.id)));
+    }
   }
 
   async function triggerScan() {
@@ -458,6 +489,14 @@ export default function DashboardPage() {
             >
               {scanning ? "Scanning..." : "Scan Now"}
             </button>
+            {selectedIds.size > 0 && (
+              <button
+                onClick={deleteSelected}
+                className="bg-red-500 text-white font-semibold px-5 py-2.5 rounded-full text-sm hover:bg-red-600 transition"
+              >
+                Delete {selectedIds.size} selected
+              </button>
+            )}
           </div>
 
           <div className="bg-white rounded-xl border border-border overflow-hidden shadow-sm">
@@ -465,6 +504,14 @@ export default function DashboardPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-navy text-white">
+                    <th className="w-10 px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={results.length > 0 && selectedIds.size === results.length}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 accent-white rounded"
+                      />
+                    </th>
                     {[
                       { key: "title", label: "Card" },
                       { key: "currentPrice", label: "Price" },
@@ -490,7 +537,7 @@ export default function DashboardPage() {
                   {results.length === 0 && (
                     <tr>
                       <td
-                        colSpan={8}
+                        colSpan={9}
                         className="text-center py-16 text-muted-foreground"
                       >
                         No results yet. Add players to your watchlist and run a
@@ -503,8 +550,16 @@ export default function DashboardPage() {
                       key={r.id}
                       className={`border-b border-border hover:bg-navy/5 transition ${
                         i % 2 === 0 ? "bg-white" : "bg-secondary/50"
-                      }`}
+                      } ${selectedIds.has(r.id) ? "bg-navy/5" : ""}`}
                     >
+                      <td className="px-3 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(r.id)}
+                          onChange={() => toggleSelect(r.id)}
+                          className="w-4 h-4 accent-navy rounded"
+                        />
+                      </td>
                       <td className="px-4 py-3 max-w-[250px]">
                         <a
                           href={r.itemUrl}

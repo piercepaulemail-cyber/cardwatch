@@ -57,13 +57,36 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await request.json();
+  const body = await request.json();
 
-  const result = await prisma.scanResult.findUnique({ where: { id } });
-  if (!result || result.userId !== session.user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // Bulk delete
+  if (body.ids && Array.isArray(body.ids)) {
+    const deleted = await prisma.scanResult.deleteMany({
+      where: {
+        id: { in: body.ids },
+        userId: session.user.id,
+      },
+    });
+    return NextResponse.json({ success: true, deleted: deleted.count });
   }
 
-  await prisma.scanResult.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+  // Single delete
+  if (body.id) {
+    const result = await prisma.scanResult.findUnique({ where: { id: body.id } });
+    if (!result || result.userId !== session.user.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    await prisma.scanResult.delete({ where: { id: body.id } });
+    return NextResponse.json({ success: true });
+  }
+
+  // Delete all
+  if (body.all === true) {
+    const deleted = await prisma.scanResult.deleteMany({
+      where: { userId: session.user.id },
+    });
+    return NextResponse.json({ success: true, deleted: deleted.count });
+  }
+
+  return NextResponse.json({ error: "No id, ids, or all provided" }, { status: 400 });
 }
