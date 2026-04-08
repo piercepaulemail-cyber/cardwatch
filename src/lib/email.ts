@@ -23,7 +23,9 @@ function buildEmailHtml(results: EbayResult[]): string {
   const cards = results
     .map(
       (r) => `
-      <div style="background:#FFFFFF;border:1px solid #E5E8ED;border-radius:8px;padding:16px;margin-bottom:12px;">
+      <div style="background:#FFFFFF;border:1px solid #E5E8ED;border-radius:8px;overflow:hidden;margin-bottom:12px;">
+        ${r.imageUrl ? `<a href="${safeUrl(r.itemUrl)}"><img src="${safeUrl(r.imageUrl)}" alt="" style="width:100%;max-height:200px;object-fit:contain;background:#F5F6F8;display:block;" /></a>` : ""}
+        <div style="padding:16px;">
         <a href="${safeUrl(r.itemUrl)}" style="color:#0B1D3A;font-size:15px;font-weight:700;text-decoration:none;line-height:1.4;display:block;margin-bottom:12px;">${esc(r.title)}</a>
         <table style="width:100%;font-size:13px;color:#6B7A8D;" cellpadding="0" cellspacing="0">
           <tr>
@@ -56,6 +58,7 @@ function buildEmailHtml(results: EbayResult[]): string {
         </table>
         <div style="margin-top:12px;">
           <a href="${safeUrl(r.itemUrl)}" style="display:inline-block;background:#0B1D3A;color:#FFFFFF;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">View on eBay &rarr;</a>
+        </div>
         </div>
       </div>`
     )
