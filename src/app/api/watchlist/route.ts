@@ -84,6 +84,17 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  // Delete the watchlist entry
   await prisma.watchlistEntry.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+
+  // Auto-delete all scan results that matched this player/description
+  const deleted = await prisma.scanResult.deleteMany({
+    where: {
+      userId: session.user.id,
+      matchedPlayer: entry.playerName,
+      matchedDesc: entry.cardDescription,
+    },
+  });
+
+  return NextResponse.json({ success: true, resultsDeleted: deleted.count });
 }

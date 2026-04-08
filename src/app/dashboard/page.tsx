@@ -136,6 +136,7 @@ export default function DashboardPage() {
       body: JSON.stringify({ id }),
     });
     loadWatchlist();
+    loadResults();
   }
 
   async function dismissResult(id: string) {
