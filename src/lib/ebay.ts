@@ -276,11 +276,13 @@ export async function searchEbay(
   }
 
   // Condition filter
+  // eBay conditionIds: 1000=New, 1500=Open Box, 2750=Graded, 3000=Used, 4000=Ungraded
   const cond = query.condition || "ungraded";
   if (cond === "graded") {
     filtered = filtered.filter((r) => r.conditionId === "2750");
   } else if (cond === "ungraded" || cond === "nearMint" || cond === "excellent") {
-    filtered = filtered.filter((r) => r.conditionId === "4000" || r.conditionId === "");
+    // Include ungraded (4000), new (1000), and unknown — exclude graded (2750)
+    filtered = filtered.filter((r) => r.conditionId !== "2750");
   }
 
   return { results: filtered, fromCache };
