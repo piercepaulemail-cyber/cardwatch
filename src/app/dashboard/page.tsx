@@ -483,13 +483,24 @@ export default function DashboardPage() {
                 </p>
               )}
             </div>
-            <button
-              onClick={triggerScan}
-              disabled={scanning}
-              className="bg-navy text-white font-semibold px-6 py-2.5 rounded-full text-sm hover:bg-navy-light transition disabled:opacity-50"
-            >
-              {scanning ? "Scanning..." : "Scan Now"}
-            </button>
+            <div className="relative">
+              <button
+                onClick={triggerScan}
+                disabled={scanning || userTier !== "elite"}
+                className={`font-semibold px-6 py-2.5 rounded-full text-sm transition ${
+                  userTier === "elite"
+                    ? "bg-navy text-white hover:bg-navy-light disabled:opacity-50"
+                    : "bg-secondary text-muted-foreground/50 cursor-not-allowed"
+                }`}
+              >
+                {scanning ? "Scanning..." : "Scan Now"}
+              </button>
+              {userTier !== "elite" && (
+                <span className="absolute -top-2 -right-2 bg-navy text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                  ELITE
+                </span>
+              )}
+            </div>
             {selectedIds.size > 0 && (
               <button
                 onClick={deleteSelected}
