@@ -560,15 +560,31 @@ export default function DashboardPage() {
                           className="w-4 h-4 accent-navy rounded"
                         />
                       </td>
-                      <td className="px-4 py-3 max-w-[250px]">
-                        <a
-                          href={r.itemUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-navy hover:text-navy/70 font-medium line-clamp-2 transition"
-                        >
-                          {r.title}
-                        </a>
+                      <td className="px-4 py-3 max-w-[300px]">
+                        <div className="flex items-center gap-3">
+                          {r.imageUrl && (
+                            <a
+                              href={r.itemUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0"
+                            >
+                              <img
+                                src={r.imageUrl}
+                                alt=""
+                                className="w-14 h-14 object-contain rounded-lg border border-border bg-secondary"
+                              />
+                            </a>
+                          )}
+                          <a
+                            href={r.itemUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-navy hover:text-navy/70 font-medium line-clamp-2 transition text-sm"
+                          >
+                            {r.title}
+                          </a>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-navy font-bold whitespace-nowrap">
                         ${r.currentPrice.toFixed(2)}
