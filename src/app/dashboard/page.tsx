@@ -572,7 +572,7 @@ export default function DashboardPage() {
                               <img
                                 src={r.imageUrl}
                                 alt=""
-                                className="w-14 h-14 object-contain rounded-lg border border-border bg-secondary"
+                                className="w-[168px] h-[168px] object-contain rounded-lg border border-border bg-secondary"
                               />
                             </a>
                           )}
