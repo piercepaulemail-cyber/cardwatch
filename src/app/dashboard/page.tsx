@@ -500,96 +500,106 @@ export default function DashboardPage() {
           </div>
 
           <div className="bg-white rounded-xl border border-border overflow-hidden shadow-sm">
-            <div className="overflow-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-navy text-white">
-                    <th className="w-10 px-3 py-3">
+            {/* Sort bar + select all */}
+            <div className="bg-navy px-4 py-3 flex items-center gap-4 flex-wrap">
+              <label className="flex items-center gap-2 text-white text-xs">
+                <input
+                  type="checkbox"
+                  checked={results.length > 0 && selectedIds.size === results.length}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 accent-white rounded"
+                />
+                Select all
+              </label>
+              <span className="text-white/40 text-xs">|</span>
+              <span className="text-white/60 text-xs">Sort by:</span>
+              {[
+                { key: "currentPrice", label: "Price" },
+                { key: "listingType", label: "Type" },
+                { key: "sellerFeedback", label: "Seller" },
+                { key: "matchedPlayer", label: "Match" },
+                { key: "listingStartTime", label: "Listed" },
+              ].map((col) => (
+                <button
+                  key={col.key}
+                  onClick={() => handleSort(col.key)}
+                  className={`text-xs font-semibold px-2.5 py-1 rounded transition ${
+                    sortBy === col.key
+                      ? "bg-white/20 text-white"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  {col.label}
+                  {sortBy === col.key && (
+                    <span className="ml-1">{sortOrder === "asc" ? "\u25B2" : "\u25BC"}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Results */}
+            <div className="divide-y divide-border">
+              {results.length === 0 && (
+                <div className="text-center py-16 text-muted-foreground">
+                  No results yet. Add players to your watchlist and run a scan.
+                </div>
+              )}
+              {results.map((r) => (
+                <div
+                  key={r.id}
+                  className={`p-4 hover:bg-navy/[0.02] transition ${selectedIds.has(r.id) ? "bg-navy/5" : ""}`}
+                >
+                  <div className="flex gap-4">
+                    {/* Checkbox */}
+                    <div className="pt-1 shrink-0">
                       <input
                         type="checkbox"
-                        checked={results.length > 0 && selectedIds.size === results.length}
-                        onChange={toggleSelectAll}
-                        className="w-4 h-4 accent-white rounded"
+                        checked={selectedIds.has(r.id)}
+                        onChange={() => toggleSelect(r.id)}
+                        className="w-4 h-4 accent-navy rounded"
                       />
-                    </th>
-                    {[
-                      { key: "title", label: "Card" },
-                      { key: "currentPrice", label: "Price" },
-                      { key: "listingType", label: "Type" },
-                      { key: "bidCount", label: "Bids" },
-                      { key: "sellerFeedback", label: "Seller" },
-                      { key: "matchedPlayer", label: "Match" },
-                      { key: "listingStartTime", label: "Listed" },
-                    ].map((col) => (
-                      <th
-                        key={col.key}
-                        className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide cursor-pointer select-none whitespace-nowrap hover:bg-navy-light transition"
-                        onClick={() => handleSort(col.key)}
+                    </div>
+
+                    {/* Image */}
+                    {r.imageUrl && (
+                      <a
+                        href={r.itemUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0"
                       >
-                        {col.label}
-                        <SortIndicator column={col.key} />
-                      </th>
-                    ))}
-                    <th className="w-10"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={9}
-                        className="text-center py-16 text-muted-foreground"
-                      >
-                        No results yet. Add players to your watchlist and run a
-                        scan.
-                      </td>
-                    </tr>
-                  )}
-                  {results.map((r, i) => (
-                    <tr
-                      key={r.id}
-                      className={`border-b border-border hover:bg-navy/5 transition ${
-                        i % 2 === 0 ? "bg-white" : "bg-secondary/50"
-                      } ${selectedIds.has(r.id) ? "bg-navy/5" : ""}`}
-                    >
-                      <td className="px-3 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(r.id)}
-                          onChange={() => toggleSelect(r.id)}
-                          className="w-4 h-4 accent-navy rounded"
+                        <img
+                          src={r.imageUrl}
+                          alt=""
+                          className="w-32 h-32 object-contain rounded-lg border border-border bg-secondary"
                         />
-                      </td>
-                      <td className="px-4 py-3 max-w-[300px]">
-                        <div className="flex items-center gap-3">
-                          {r.imageUrl && (
-                            <a
-                              href={r.itemUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="shrink-0"
-                            >
-                              <img
-                                src={r.imageUrl}
-                                alt=""
-                                className="w-[250px] h-[250px] object-contain rounded-lg border border-border bg-secondary"
-                              />
-                            </a>
-                          )}
-                          <a
-                            href={r.itemUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-navy hover:text-navy/70 font-medium line-clamp-2 transition text-sm"
-                          >
-                            {r.title}
-                          </a>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-navy font-bold whitespace-nowrap">
-                        ${r.currentPrice.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3">
+                      </a>
+                    )}
+
+                    {/* Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <a
+                          href={r.itemUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-navy hover:text-navy/70 font-semibold transition text-sm leading-snug"
+                        >
+                          {r.title}
+                        </a>
+                        <button
+                          onClick={() => dismissResult(r.id)}
+                          className="text-muted-foreground/30 hover:text-destructive transition p-1 shrink-0"
+                          title="Dismiss"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 mt-2">
+                        <span className="text-xl font-extrabold text-navy">
+                          ${r.currentPrice.toFixed(2)}
+                        </span>
                         <span
                           className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
                             r.listingType === "Auction"
@@ -599,33 +609,36 @@ export default function DashboardPage() {
                         >
                           {r.listingType === "Auction" ? "Auction" : "Buy Now"}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 font-medium">{r.bidCount}</td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-xs">{r.sellerName}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {r.sellerFeedback} feedback
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-xs font-medium">
-                        {r.matchedPlayer}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {timeAgo(r.listingStartTime)}
-                      </td>
-                      <td className="px-2 py-3">
-                        <button
-                          onClick={() => dismissResult(r.id)}
-                          className="text-muted-foreground/40 hover:text-destructive transition p-1"
-                          title="Dismiss"
+                        {r.bidCount > 0 && (
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            {r.bidCount} bid{r.bidCount !== 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <span>
+                          <span className="font-medium text-navy">{r.sellerName}</span>{" "}
+                          ({r.sellerFeedback})
+                        </span>
+                        <span>Matched: <span className="font-medium text-navy">{r.matchedPlayer}</span></span>
+                        <span>{timeAgo(r.listingStartTime)}</span>
+                      </div>
+
+                      <div className="mt-3">
+                        <a
+                          href={r.itemUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block bg-navy text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-navy-light transition"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          View on eBay &rarr;
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
