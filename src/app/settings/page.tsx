@@ -1,23 +1,28 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 
 type Tab = "profile" | "security" | "subscription" | "privacy" | "danger";
 
-export default function SettingsPage() {
+function SettingsContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>("profile");
 
   // Profile state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [newEmail, setNewEmail] = useState("");
   const [createdAt, setCreatedAt] = useState("");
   const [hasPassword, setHasPassword] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
+  const [emailMsg, setEmailMsg] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
 
   // Password state
   const [currentPw, setCurrentPw] = useState("");
@@ -41,6 +46,17 @@ export default function SettingsPage() {
   }, [status, router]);
 
   useEffect(() => {
+    if (searchParams.get("email_changed") === "true") {
+      setProfileMsg("Email updated successfully! Sign in again with your new email.");
+    }
+    if (searchParams.get("email_error")) {
+      const err = searchParams.get("email_error");
+      if (err === "email-taken") setEmailError("That email is already in use.");
+      else setEmailError("Email verification link is invalid or expired.");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     if (!session?.user) return;
     fetch("/api/user").then((r) => r.json()).then((data) => {
       setName(data.name || "");
@@ -57,6 +73,26 @@ export default function SettingsPage() {
       }
     });
   }, [session]);
+
+  async function changeEmail() {
+    setEmailMsg("");
+    setEmailError("");
+    if (!newEmail.trim()) return;
+    setEmailSending(true);
+    const res = await fetch("/api/user/email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ newEmail: newEmail.trim() }),
+    });
+    const data = await res.json();
+    setEmailSending(false);
+    if (res.ok) {
+      setEmailMsg("Verification email sent to " + newEmail.trim() + ". Check your inbox!");
+      setNewEmail("");
+    } else {
+      setEmailError(data.error || "Failed to change email");
+    }
+  }
 
   async function saveProfile() {
     await fetch("/api/user", {
@@ -178,12 +214,26 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-navy block mb-1.5">Email</label>
-                      <input
-                        value={email}
-                        disabled
-                        className="w-full px-4 py-3 rounded-xl border-2 border-border text-sm bg-secondary text-muted-foreground"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+                      <p className="text-sm text-navy font-medium mb-2">{email}</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="email"
+                          value={newEmail}
+                          onChange={(e) => setNewEmail(e.target.value)}
+                          placeholder="New email address"
+                          className="flex-1 px-4 py-2.5 rounded-xl border-2 border-border text-sm focus:border-navy focus:outline-none transition"
+                        />
+                        <button
+                          onClick={changeEmail}
+                          disabled={emailSending || !newEmail.trim()}
+                          className="bg-navy text-white font-semibold px-4 py-2.5 rounded-xl text-sm hover:bg-navy-light transition disabled:opacity-50 shrink-0"
+                        >
+                          {emailSending ? "Sending..." : "Change"}
+                        </button>
+                      </div>
+                      {emailMsg && <p className="text-xs text-green-600 font-medium mt-1.5">{emailMsg}</p>}
+                      {emailError && <p className="text-xs text-red-500 font-medium mt-1.5">{emailError}</p>}
+                      <p className="text-xs text-muted-foreground mt-1">A verification link will be sent to the new email</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-navy block mb-1.5">Member since</label>
@@ -397,5 +447,13 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense>
+      <SettingsContent />
+    </Suspense>
   );
 }
