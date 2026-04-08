@@ -12,6 +12,9 @@ export default function Home() {
           <Link href="/pricing" className="hover:text-white transition">
             Pricing
           </Link>
+          <a href="mailto:hello@mycardwatch.com" className="hover:text-white transition">
+            Support
+          </a>
           <Link href="/login" className="hover:text-white transition">
             Sign in
           </Link>
