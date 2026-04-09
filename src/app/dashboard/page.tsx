@@ -663,7 +663,7 @@ export default function DashboardPage() {
                         View on eBay &rarr;
                       </a>
                       <a
-                        href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(r.title.split(" ").slice(0, 8).join(" "))}&LH_Complete=1&LH_Sold=1&_sop=13`}
+                        href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(r.title.split(" ").slice(0, 10).join(" "))}&LH_Complete=1&LH_Sold=1&_sop=13`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block border border-border text-navy text-xs font-semibold px-5 py-2 rounded-lg hover:bg-secondary transition ml-2"
