@@ -662,6 +662,14 @@ export default function DashboardPage() {
                       >
                         View on eBay &rarr;
                       </a>
+                      <a
+                        href={`https://130point.com/sales/?search=${encodeURIComponent(r.title)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block border border-border text-navy text-xs font-semibold px-5 py-2 rounded-lg hover:bg-secondary transition ml-2"
+                      >
+                        Price Check &rarr;
+                      </a>
                     </div>
                   </div>
                 </div>
