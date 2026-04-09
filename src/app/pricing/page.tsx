@@ -86,14 +86,7 @@ export default function PricingPage() {
           CardWatch
         </Link>
         <div className="flex gap-3">
-          {session ? (
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="bg-white text-navy font-semibold px-5 py-2.5 rounded-full text-sm hover:bg-silver-light transition"
-            >
-              Dashboard
-            </button>
-          ) : (
+          {!session && (
             <button
               onClick={() => router.push("/login")}
               className="text-white/80 hover:text-white text-sm font-medium transition"
