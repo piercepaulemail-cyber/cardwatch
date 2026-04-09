@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireSubscription } from "@/lib/require-subscription";
+import { TIERS, type TierKey } from "@/lib/stripe";
 
 export async function GET() {
   const session = await auth();
@@ -31,6 +32,20 @@ export async function POST(request: Request) {
   const sub = await requireSubscription(session.user.id);
   if (!sub) {
     return NextResponse.json({ error: "Active subscription required" }, { status: 403 });
+  }
+
+  // Check watchlist limit for tier
+  const tierConfig = TIERS[sub.tier as TierKey];
+  if (tierConfig?.watchlistLimit > 0) {
+    const currentCount = await prisma.watchlistEntry.count({
+      where: { userId: session.user.id },
+    });
+    if (currentCount >= tierConfig.watchlistLimit) {
+      return NextResponse.json(
+        { error: `Watchlist limit reached (${tierConfig.watchlistLimit}). Upgrade your plan for more.` },
+        { status: 403 }
+      );
+    }
   }
 
   const { playerName, cardDescription, maxPrice, minPrice, listingType, condition, notes } =

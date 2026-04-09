@@ -16,10 +16,10 @@ const tiers = [
     annualTotal: "$47.88",
     interval: "Up to every 2 hours",
     features: [
-      "Choose: every 2h, 6h, 12h, or daily",
-      "Unlimited watchlist entries",
+      "25 watchlist entries",
+      "Scan every 2h, 6h, 12h, or daily",
       "Email alerts for new listings",
-      "Sortable results table",
+      "Sortable results + price check",
     ],
   },
   {
@@ -32,10 +32,10 @@ const tiers = [
     interval: "Up to every 30 min",
     popular: true,
     features: [
-      "Choose: every 30m, 45m, 1h, 2h, 6h, 12h, daily",
+      "100 watchlist entries",
+      "Scan every 30m, 45m, 1h + Scout options",
       "Everything in Scout",
       "Priority scanning",
-      "Faster alerts",
     ],
   },
   {
@@ -47,10 +47,10 @@ const tiers = [
     annualTotal: "$287.88",
     interval: "Up to every 1 min",
     features: [
+      "Unlimited watchlist entries",
       "Scan as fast as every 1 minute",
+      "On-demand Scan Now button",
       "Everything in Pro",
-      "PSA grade data (coming soon)",
-      "Strong buy scoring (coming soon)",
     ],
   },
 ];

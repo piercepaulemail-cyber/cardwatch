@@ -16,12 +16,12 @@ const FAQ: { keywords: string[]; response: string }[] = [
   {
     keywords: ["price", "cost", "how much", "pricing", "plan", "plans", "subscription", "subscribe", "pay"],
     response:
-      "We have 3 plans:\n\n• Scout — $4.99/mo: Scan every 2h, 6h, 12h, or daily\n• Pro — $14.99/mo: Scan every 30m, 45m, 1h, plus all Scout options\n• Elite — $29.99/mo: Scan as fast as every 1 minute, plus all options\n\nAll plans include unlimited watchlist entries, email alerts, and a 3-day free trial!",
+      "We have 3 plans:\n\n• Scout — $4.99/mo: 25 watchlist entries, scan every 2h, 6h, 12h, or daily\n• Pro — $14.99/mo: 100 watchlist entries, scan every 30m, 45m, 1h, plus Scout options\n• Elite — $29.99/mo: Unlimited watchlist entries, scan as fast as every 1 minute\n\nAll plans include email alerts, price check, and a 3-day free trial!",
   },
   {
     keywords: ["scout"],
     response:
-      "The Scout plan is $4.99/mo. You can scan every 2 hours, 6 hours, 12 hours, or daily. It includes unlimited watchlist entries, email alerts, and sortable results. Great for casual collectors!",
+      "The Scout plan is $4.99/mo. You get 25 watchlist entries and can scan every 2 hours, 6 hours, 12 hours, or daily. Includes email alerts and sortable results. Great for casual collectors!",
   },
   {
     keywords: ["pro"],

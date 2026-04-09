@@ -43,9 +43,10 @@ export const TIERS = {
     priceDisplay: "$4.99",
     interval: "month" as const,
     scanIntervalMinutes: 120,
+    watchlistLimit: 25,
     features: [
+      "25 watchlist entries",
       "Scan up to every 2 hours",
-      "Unlimited watchlist entries",
       "Email alerts",
       "Sortable results",
     ],
@@ -56,7 +57,9 @@ export const TIERS = {
     priceDisplay: "$14.99",
     interval: "month" as const,
     scanIntervalMinutes: 30,
+    watchlistLimit: 100,
     features: [
+      "100 watchlist entries",
       "Scan up to every 30 minutes",
       "Everything in Scout",
       "Priority scanning",
@@ -68,7 +71,9 @@ export const TIERS = {
     priceDisplay: "$29.99",
     interval: "month" as const,
     scanIntervalMinutes: 15,
+    watchlistLimit: 0, // 0 = unlimited
     features: [
+      "Unlimited watchlist entries",
       "Scan as fast as every 1 minute",
       "Everything in Pro",
       "PSA grade data (coming soon)",

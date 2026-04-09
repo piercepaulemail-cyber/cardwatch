@@ -374,7 +374,7 @@ export default function DashboardPage() {
                 Watchlist
               </h2>
               <span className="bg-navy text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                {watchlist.length}
+                {watchlist.length}{userTier === "scout" ? "/25" : userTier === "pro" ? "/100" : ""}
               </span>
             </div>
             {watchlist.length === 0 && (
