@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import Logo from "@/components/logo";
 
 type Tab = "profile" | "security" | "subscription" | "privacy" | "danger";
 
@@ -157,7 +158,8 @@ function SettingsContent() {
     <div className="min-h-screen bg-secondary">
       {/* Nav */}
       <nav className="bg-navy px-6 py-3 flex justify-between items-center">
-        <Link href="/dashboard" className="text-lg font-bold text-white tracking-tight">
+        <Link href="/dashboard" className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+          <Logo size={22} />
           CardWatch
         </Link>
         <div className="flex items-center gap-4">

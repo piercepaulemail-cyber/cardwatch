@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/logo";
 import { Suspense } from "react";
 
 function LoginForm() {
@@ -76,7 +77,8 @@ function LoginForm() {
     <div className="min-h-screen bg-navy flex flex-col">
       {/* Nav */}
       <nav className="px-6 py-4">
-        <Link href="/" className="text-xl font-bold text-white tracking-tight">
+        <Link href="/" className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+          <Logo size={22} />
           CardWatch
         </Link>
       </nav>

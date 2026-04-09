@@ -1,11 +1,13 @@
 import Link from "next/link";
+import Logo from "@/components/logo";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
       <nav className="bg-navy px-6 py-4 flex justify-between items-center">
-        <span className="text-xl font-bold text-white tracking-tight">
+        <span className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+          <Logo size={22} />
           CardWatch
         </span>
         <div className="hidden md:flex items-center gap-8 text-sm text-white/80">

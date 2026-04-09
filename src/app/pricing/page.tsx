@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import Logo from "@/components/logo";
 
 const tiers = [
   {
@@ -80,7 +81,8 @@ export default function PricingPage() {
     <div className="min-h-screen bg-white">
       {/* Nav */}
       <nav className="bg-navy px-6 py-4 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold text-white tracking-tight">
+        <Link href="/" className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+          <Logo size={22} />
           CardWatch
         </Link>
         <div className="flex gap-3">
