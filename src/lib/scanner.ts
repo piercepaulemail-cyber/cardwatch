@@ -142,6 +142,9 @@ export async function runCronScan() {
       playerName: e.playerName,
       cardDescription: e.cardDescription,
       maxPrice: e.maxPrice,
+      minPrice: e.minPrice,
+      listingType: e.listingType,
+      condition: e.condition,
     }));
 
     dueUsers.push({
