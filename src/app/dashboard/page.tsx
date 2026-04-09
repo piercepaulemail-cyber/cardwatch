@@ -569,61 +569,56 @@ export default function DashboardPage() {
               {results.map((r) => (
                 <div
                   key={r.id}
-                  className={`p-4 hover:bg-navy/[0.02] transition ${selectedIds.has(r.id) ? "bg-navy/5" : ""}`}
+                  className={`border border-border rounded-xl overflow-hidden mx-3 my-3 bg-white hover:shadow-md transition ${selectedIds.has(r.id) ? "ring-2 ring-navy" : ""}`}
                 >
-                  <div className="flex gap-4">
-                    {/* Checkbox */}
-                    <div className="pt-1 shrink-0">
+                  {/* Image — full width on mobile, constrained on desktop */}
+                  {r.imageUrl && (
+                    <a href={r.itemUrl} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={r.imageUrl}
+                        alt=""
+                        className="w-full max-h-[300px] object-contain bg-secondary"
+                      />
+                    </a>
+                  )}
+
+                  {/* Content */}
+                  <div className="p-4">
+                    {/* Top row: checkbox, title, dismiss */}
+                    <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(r.id)}
                         onChange={() => toggleSelect(r.id)}
-                        className="w-4 h-4 accent-navy rounded"
+                        className="w-4 h-4 accent-navy rounded mt-1 shrink-0"
                       />
-                    </div>
-
-                    {/* Image */}
-                    {r.imageUrl && (
                       <a
                         href={r.itemUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="shrink-0"
+                        className="text-navy font-bold text-[15px] leading-snug hover:text-navy/70 transition flex-1"
                       >
-                        <img
-                          src={r.imageUrl}
-                          alt=""
-                          className="w-[250px] h-[250px] object-contain rounded-lg border border-border bg-secondary"
-                        />
+                        {r.title}
                       </a>
-                    )}
+                      <button
+                        onClick={() => dismissResult(r.id)}
+                        className="text-muted-foreground/30 hover:text-destructive transition p-1 shrink-0"
+                        title="Dismiss"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
 
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3">
-                        <a
-                          href={r.itemUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-navy hover:text-navy/70 font-semibold transition text-sm leading-snug"
-                        >
-                          {r.title}
-                        </a>
-                        <button
-                          onClick={() => dismissResult(r.id)}
-                          className="text-muted-foreground/30 hover:text-destructive transition p-1 shrink-0"
-                          title="Dismiss"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
+                    {/* Price + Type row */}
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div>
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Price</p>
+                        <p className="text-2xl font-extrabold text-navy">${r.currentPrice.toFixed(2)}</p>
                       </div>
-
-                      <div className="flex flex-wrap items-center gap-3 mt-2">
-                        <span className="text-xl font-extrabold text-navy">
-                          ${r.currentPrice.toFixed(2)}
-                        </span>
+                      <div>
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Type</p>
                         <span
-                          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mt-1 ${
                             r.listingType === "Auction"
                               ? "bg-amber-100 text-amber-800"
                               : "bg-navy/10 text-navy"
@@ -631,32 +626,40 @@ export default function DashboardPage() {
                         >
                           {r.listingType === "Auction" ? "Auction" : "Buy Now"}
                         </span>
-                        {r.bidCount > 0 && (
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            {r.bidCount} bid{r.bidCount !== 1 ? "s" : ""}
-                          </span>
-                        )}
                       </div>
+                    </div>
 
-                      <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span>
-                          <span className="font-medium text-navy">{r.sellerName}</span>{" "}
-                          ({r.sellerFeedback})
-                        </span>
-                        <span>Matched: <span className="font-medium text-navy">{r.matchedPlayer}</span></span>
-                        <span>{timeAgo(r.listingStartTime)}</span>
+                    {/* Seller + Bids row */}
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div>
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Seller</p>
+                        <p className="text-sm font-semibold text-navy">{r.sellerName}</p>
+                        <p className="text-xs text-muted-foreground">({r.sellerFeedback})</p>
                       </div>
+                      <div>
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Bids</p>
+                        <p className="text-sm font-semibold text-navy">{r.bidCount}</p>
+                      </div>
+                    </div>
 
-                      <div className="mt-3">
-                        <a
-                          href={r.itemUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-block bg-navy text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-navy-light transition"
-                        >
-                          View on eBay &rarr;
-                        </a>
-                      </div>
+                    {/* Matched + Listed row */}
+                    <div className="mt-3">
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Matched</p>
+                      <p className="text-sm font-semibold text-navy">{r.matchedPlayer} — {r.matchedDesc}</p>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground mt-2">{timeAgo(r.listingStartTime)}</p>
+
+                    {/* CTA */}
+                    <div className="mt-3">
+                      <a
+                        href={r.itemUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block bg-navy text-white text-xs font-semibold px-5 py-2 rounded-lg hover:bg-navy-light transition"
+                      >
+                        View on eBay &rarr;
+                      </a>
                     </div>
                   </div>
                 </div>
