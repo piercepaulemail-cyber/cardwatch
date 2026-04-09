@@ -3,11 +3,18 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Rate limit: 3 email changes per user per hour
+  const { allowed } = await rateLimit(`email-change:${session.user.id}`);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
   }
 
   const { newEmail } = await request.json();
