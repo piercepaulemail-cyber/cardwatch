@@ -53,7 +53,7 @@ export default function Home() {
                 <span className="text-white/60">Did you see it?</span>
               </h1>
               <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed max-w-lg">
-                CardWatch scans eBay every 15 minutes for the exact cards you want — raw, graded, any sport.
+                CardWatch scans eBay every minute for the exact cards you want — raw, graded, any sport.
                 Get alerted before other collectors even open the app.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -183,7 +183,7 @@ export default function Home() {
             <p className="text-white/50 text-sm mt-1">eBay Monitoring</p>
           </div>
           <div>
-            <p className="text-3xl font-extrabold text-white">15 min</p>
+            <p className="text-3xl font-extrabold text-white">1 min</p>
             <p className="text-white/50 text-sm mt-1">Fastest Scan Cycle</p>
           </div>
           <div>
@@ -228,7 +228,7 @@ export default function Home() {
             <div className="bg-green-50 border border-green-100 rounded-2xl p-6">
               <p className="font-bold text-green-900 mb-3">With CardWatch</p>
               <ul className="space-y-2.5 text-sm text-green-800">
-                <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> eBay scanned automatically every 15 minutes</li>
+                <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> eBay scanned automatically every minute</li>
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Email alert with photo, price, and direct link</li>
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> See new listings before anyone else</li>
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Filter by condition: raw, graded, near mint</li>
@@ -341,7 +341,7 @@ export default function Home() {
               </div>
               <h3 className="text-lg font-bold text-navy mb-2">Smart Scanning</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Scans eBay as often as every 15 minutes. Choose your frequency. Raw cards, graded slabs, any sport, any player.
+                Scans eBay as often as every minute. Choose your frequency. Raw cards, graded slabs, any sport, any player.
               </p>
             </div>
 

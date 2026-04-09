@@ -45,9 +45,9 @@ const tiers = [
     monthlyPrice: "$29.99",
     annualMonthly: "$23.99",
     annualTotal: "$287.88",
-    interval: "Up to every 15 min",
+    interval: "Up to every 1 min",
     features: [
-      "All scan intervals including every 15 min",
+      "Scan as fast as every 1 minute",
       "Everything in Pro",
       "PSA grade data (coming soon)",
       "Strong buy scoring (coming soon)",
