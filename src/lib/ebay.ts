@@ -93,6 +93,66 @@ export interface EbayResult {
   matchedPlayer: string;
   matchedDesc: string;
   conditionId: string;
+  conditionDescriptor: string; // "Near mint or better", "Excellent", "Very good", "Poor", ""
+}
+
+// Condition descriptor values from eBay
+const DESCRIPTOR_NEAR_MINT = "Near mint or better";
+const DESCRIPTOR_EXCELLENT = "Excellent";
+// const DESCRIPTOR_VERY_GOOD = "Very good";
+// const DESCRIPTOR_POOR = "Poor";
+
+const ITEM_DETAIL_ENDPOINT = "https://api.ebay.com/buy/browse/v1/item";
+
+/**
+ * Fetch condition descriptors for a list of items via individual getItem calls.
+ * Only called when the user has selected a specific condition (nearMint/excellent).
+ * Returns a map of itemId → conditionDescriptor string.
+ */
+async function fetchConditionDescriptors(
+  itemIds: string[]
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  if (!itemIds.length) return result;
+
+  const token = await getEbayToken();
+
+  // Fetch in parallel, max 10 concurrent to respect rate limits
+  const batchSize = 10;
+  for (let i = 0; i < itemIds.length; i += batchSize) {
+    const batch = itemIds.slice(i, i + batchSize);
+    const promises = batch.map(async (itemId) => {
+      try {
+        const resp = await fetch(`${ITEM_DETAIL_ENDPOINT}/${itemId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
+          },
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const descriptors = data.conditionDescriptors || [];
+        for (const desc of descriptors) {
+          for (const val of desc.values || []) {
+            if (val.content) {
+              result.set(itemId, val.content);
+              return;
+            }
+          }
+        }
+      } catch {
+        // Skip items we can't fetch
+      }
+    });
+    await Promise.all(promises);
+
+    // Small delay between batches
+    if (i + batchSize < itemIds.length) {
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+
+  return result;
 }
 
 // --- Cache helpers ---
@@ -238,6 +298,7 @@ async function searchEbayRaw(
       matchedPlayer: playerName,
       matchedDesc: cardDescription,
       conditionId: item.conditionId || item.condition?.conditionId || "",
+      conditionDescriptor: "", // Populated later via getItem if needed
     });
   }
 
@@ -280,9 +341,42 @@ export async function searchEbay(
   const cond = query.condition || "ungraded";
   if (cond === "graded") {
     filtered = filtered.filter((r) => r.conditionId === "2750");
-  } else if (cond === "ungraded" || cond === "nearMint" || cond === "excellent") {
-    // Include ungraded (4000), new (1000), and unknown — exclude graded (2750)
+  } else if (cond === "ungraded") {
+    // Show all non-graded cards regardless of descriptor
     filtered = filtered.filter((r) => r.conditionId !== "2750");
+  } else if (cond === "nearMint" || cond === "excellent") {
+    // First exclude graded cards
+    filtered = filtered.filter((r) => r.conditionId !== "2750");
+
+    // Fetch condition descriptors for remaining items to filter accurately
+    const ungradedIds = filtered
+      .filter((r) => !r.conditionDescriptor) // Only fetch if not already populated
+      .map((r) => r.ebayItemId);
+
+    if (ungradedIds.length > 0) {
+      const descriptors = await fetchConditionDescriptors(ungradedIds);
+      for (const r of filtered) {
+        if (!r.conditionDescriptor && descriptors.has(r.ebayItemId)) {
+          r.conditionDescriptor = descriptors.get(r.ebayItemId) || "";
+        }
+      }
+    }
+
+    // Now filter by descriptor
+    if (cond === "nearMint") {
+      // Only "Near mint or better"
+      filtered = filtered.filter(
+        (r) => r.conditionDescriptor === DESCRIPTOR_NEAR_MINT || r.conditionDescriptor === ""
+      );
+    } else if (cond === "excellent") {
+      // "Near mint or better" OR "Excellent"
+      filtered = filtered.filter(
+        (r) =>
+          r.conditionDescriptor === DESCRIPTOR_NEAR_MINT ||
+          r.conditionDescriptor === DESCRIPTOR_EXCELLENT ||
+          r.conditionDescriptor === ""
+      );
+    }
   }
 
   return { results: filtered, fromCache };
