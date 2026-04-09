@@ -9,8 +9,6 @@ export function getStripe() {
 }
 
 export const SCAN_INTERVALS = [
-  { label: "Every 1 min", minutes: 1, minTier: "elite" },
-  { label: "Every 5 min", minutes: 5, minTier: "elite" },
   { label: "Every 15 min", minutes: 15, minTier: "elite" },
   { label: "Every 30 min", minutes: 30, minTier: "pro" },
   { label: "Every 45 min", minutes: 45, minTier: "pro" },
@@ -74,7 +72,7 @@ export const TIERS = {
     watchlistLimit: 0, // 0 = unlimited
     features: [
       "Unlimited watchlist entries",
-      "Scan as fast as every 1 minute",
+      "Scan as fast as every 15 minutes",
       "Everything in Pro",
       "PSA grade data (coming soon)",
       "Strong buy scoring (coming soon)",

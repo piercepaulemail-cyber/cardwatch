@@ -45,10 +45,10 @@ const tiers = [
     monthlyPrice: "$29.99",
     annualMonthly: "$23.99",
     annualTotal: "$287.88",
-    interval: "Up to every 1 min",
+    interval: "Up to every 15 min",
     features: [
       "Unlimited watchlist entries",
-      "Scan as fast as every 1 minute",
+      "Scan as fast as every 15 minutes",
       "On-demand Scan Now button",
       "Everything in Pro",
     ],

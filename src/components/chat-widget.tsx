@@ -16,7 +16,7 @@ const FAQ: { keywords: string[]; response: string }[] = [
   {
     keywords: ["price", "cost", "how much", "pricing", "plan", "plans", "subscription", "subscribe", "pay"],
     response:
-      "We have 3 plans:\n\n• Scout — $4.99/mo: 25 watchlist entries, scan every 2h, 6h, 12h, or daily\n• Pro — $14.99/mo: 100 watchlist entries, scan every 30m, 45m, 1h, plus Scout options\n• Elite — $29.99/mo: Unlimited watchlist entries, scan as fast as every 1 minute\n\nAll plans include email alerts, price check, and a 3-day free trial!",
+      "We have 3 plans:\n\n• Scout — $4.99/mo: 25 watchlist entries, scan every 2h, 6h, 12h, or daily\n• Pro — $14.99/mo: 100 watchlist entries, scan every 30m, 45m, 1h, plus Scout options\n• Elite — $29.99/mo: Unlimited watchlist entries, scan as fast as every 15 minutes\n\nAll plans include email alerts, price check, and a 3-day free trial!",
   },
   {
     keywords: ["scout"],
@@ -31,7 +31,7 @@ const FAQ: { keywords: string[]; response: string }[] = [
   {
     keywords: ["elite"],
     response:
-      "The Elite plan is $29.99/mo. You get access to every scan interval including every 1 minute — the fastest available. Includes everything in Pro, plus upcoming features like PSA grade data and strong buy scoring. Built for serious collectors and flippers!",
+      "The Elite plan is $29.99/mo. You get access to every scan interval including every 15 minutes — the fastest available. Includes everything in Pro, plus upcoming features like PSA grade data and strong buy scoring. Built for serious collectors and flippers!",
   },
   {
     keywords: ["trial", "free"],
@@ -41,7 +41,7 @@ const FAQ: { keywords: string[]; response: string }[] = [
   {
     keywords: ["scan", "how often", "frequency", "fast", "speed", "interval"],
     response:
-      "You choose your scan frequency from the dashboard! Options range from every 1 minute to once daily, depending on your plan:\n\n• Scout: 2h, 6h, 12h, daily\n• Pro: 30m, 45m, 1h + Scout options\n• Elite: 1m, 5m, 15m + all options\n\nElite users also get the 'Scan Now' button for instant on-demand scans.",
+      "You choose your scan frequency from the dashboard! Options range from every 15 minutes to once daily, depending on your plan:\n\n• Scout: 2h, 6h, 12h, daily\n• Pro: 30m, 45m, 1h + Scout options\n• Elite: 15m + all options\n\nElite users also get the 'Scan Now' button for instant on-demand scans.",
   },
   {
     keywords: ["cancel", "refund", "unsubscribe"],
