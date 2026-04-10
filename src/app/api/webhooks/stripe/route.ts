@@ -18,18 +18,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  try {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object;
       const userId = session.metadata?.userId;
       const tier = session.metadata?.tier as TierKey;
+      console.log(`[Webhook] checkout.session.completed: userId=${userId}, tier=${tier}`);
       if (!userId || !tier) break;
 
       const subscription = await getStripe().subscriptions.retrieve(
         session.subscription as string
       );
 
+      const sub = subscription as unknown as Record<string, unknown>;
+      const trialEnd = (sub.trial_end as number) || null;
+      const periodEnd = (sub.current_period_end as number) || Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
+
       const tierConfig = TIERS[tier];
+      console.log(`[Webhook] Creating subscription: tier=${tier}, status=${subscription.status}, periodEnd=${periodEnd}`);
+
       await prisma.subscription.upsert({
         where: { userId },
         create: {
@@ -40,12 +48,8 @@ export async function POST(request: Request) {
           tier,
           scanIntervalMinutes: tierConfig.scanIntervalMinutes,
           status: subscription.status,
-          trialEndsAt: subscription.trial_end
-            ? new Date(subscription.trial_end * 1000)
-            : null,
-          currentPeriodEnd: new Date(
-            (subscription as unknown as Record<string, number>).current_period_end * 1000
-          ),
+          trialEndsAt: trialEnd ? new Date(trialEnd * 1000) : null,
+          currentPeriodEnd: new Date(periodEnd * 1000),
         },
         update: {
           stripeCustomerId: session.customer as string,
@@ -54,14 +58,11 @@ export async function POST(request: Request) {
           tier,
           scanIntervalMinutes: tierConfig.scanIntervalMinutes,
           status: subscription.status,
-          trialEndsAt: subscription.trial_end
-            ? new Date(subscription.trial_end * 1000)
-            : null,
-          currentPeriodEnd: new Date(
-            (subscription as unknown as Record<string, number>).current_period_end * 1000
-          ),
+          trialEndsAt: trialEnd ? new Date(trialEnd * 1000) : null,
+          currentPeriodEnd: new Date(periodEnd * 1000),
         },
       });
+      console.log(`[Webhook] Subscription created for ${userId}`);
       break;
     }
 
@@ -111,6 +112,10 @@ export async function POST(request: Request) {
       }
       break;
     }
+  }
+  } catch (err) {
+    console.error("[Webhook] Processing error:", err);
+    return NextResponse.json({ error: "Webhook processing failed", details: String(err) }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
