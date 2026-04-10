@@ -230,7 +230,7 @@ export default function Home() {
               <ul className="space-y-2.5 text-sm text-green-800">
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> eBay scanned automatically 24/7</li>
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Email alert with photo, price, and direct link</li>
-                <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Get notified as new listings appear</li>
+                <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Compare prices to recent sales with one click</li>
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Filter by condition: raw, graded, near mint</li>
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Sort by price, seller rating, bids — find the edge</li>
               </ul>
