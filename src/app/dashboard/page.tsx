@@ -591,7 +591,7 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* Results */}
+            {/* Results — eBay-style compact list */}
             <div className="divide-y divide-border">
               {results.length === 0 && (
                 <div className="text-center py-16 text-muted-foreground">
@@ -601,106 +601,78 @@ export default function DashboardPage() {
               {results.map((r) => (
                 <div
                   key={r.id}
-                  className={`border border-border rounded-xl overflow-hidden mx-3 my-3 bg-white hover:shadow-md transition ${selectedIds.has(r.id) ? "ring-2 ring-navy" : ""}`}
+                  className={`flex gap-3 p-3 hover:bg-secondary/50 transition cursor-pointer ${selectedIds.has(r.id) ? "bg-gold/5" : ""}`}
+                  onClick={() => router.push(`/dashboard/card/${r.id}`)}
                 >
-                  {/* Image — full width on mobile, constrained on desktop */}
-                  {r.imageUrl && (
-                    <a href={r.itemUrl} target="_blank" rel="noopener noreferrer">
-                      <img
-                        src={r.imageUrl}
-                        alt=""
-                        className="w-full max-h-[300px] object-contain bg-secondary"
-                      />
-                    </a>
-                  )}
-
-                  {/* Content */}
-                  <div className="p-4">
-                    {/* Top row: checkbox, title, dismiss */}
-                    <div className="flex items-start gap-3">
+                  {/* Thumbnail with checkbox */}
+                  <div className="relative shrink-0">
+                    <div
+                      className="absolute top-1 left-1 z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <input
                         type="checkbox"
                         checked={selectedIds.has(r.id)}
                         onChange={() => toggleSelect(r.id)}
-                        className="w-4 h-4 accent-gold rounded mt-1 shrink-0"
+                        className="w-4 h-4 accent-gold rounded"
                       />
-                      <a
-                        href={r.itemUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-navy font-bold text-[15px] leading-snug hover:text-navy/70 transition flex-1"
-                      >
-                        {r.title}
-                      </a>
-                      <button
-                        onClick={() => dismissResult(r.id)}
-                        className="text-muted-foreground/30 hover:text-destructive transition p-1 shrink-0"
-                        title="Dismiss"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
                     </div>
-
-                    {/* Price + Type row */}
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      <div>
-                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Price</p>
-                        <p className="text-2xl font-extrabold text-navy">${r.currentPrice.toFixed(2)}</p>
+                    {r.imageUrl ? (
+                      <img
+                        src={r.imageUrl}
+                        alt=""
+                        className="w-[100px] h-[100px] object-cover rounded-lg border border-border bg-secondary"
+                      />
+                    ) : (
+                      <div className="w-[100px] h-[100px] rounded-lg border border-border bg-secondary flex items-center justify-center">
+                        <svg className="w-8 h-8 text-muted-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                       </div>
-                      <div>
-                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Type</p>
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mt-1 ${
-                            r.listingType === "Auction"
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-navy/10 text-navy"
-                          }`}
-                        >
-                          {r.listingType === "Auction" ? "Auction" : "Buy Now"}
+                    )}
+                  </div>
+
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-navy leading-snug line-clamp-2">
+                      {r.title}
+                    </p>
+                    <p className="text-lg font-extrabold text-navy mt-1">
+                      ${r.currentPrice.toFixed(2)}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                          r.listingType === "Auction"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-green/10 text-green"
+                        }`}
+                      >
+                        {r.listingType === "Auction" ? "Auction" : "Buy Now"}
+                      </span>
+                      {r.bidCount > 0 && (
+                        <span className="text-[10px] text-muted-foreground font-medium">
+                          {r.bidCount} bid{r.bidCount !== 1 ? "s" : ""}
                         </span>
-                      </div>
+                      )}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {r.sellerName} ({r.sellerFeedback}) · {timeAgo(r.listingStartTime)}
+                    </p>
+                  </div>
 
-                    {/* Seller + Bids row */}
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      <div>
-                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Seller</p>
-                        <p className="text-sm font-semibold text-navy">{r.sellerName}</p>
-                        <p className="text-xs text-muted-foreground">({r.sellerFeedback})</p>
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Bids</p>
-                        <p className="text-sm font-semibold text-navy">{r.bidCount}</p>
-                      </div>
-                    </div>
-
-                    {/* Matched + Listed row */}
-                    <div className="mt-3">
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Matched</p>
-                      <p className="text-sm font-semibold text-navy">{r.matchedPlayer} — {r.matchedDesc}</p>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground mt-2">{timeAgo(r.listingStartTime)}</p>
-
-                    {/* CTA */}
-                    <div className="mt-3">
-                      <a
-                        href={r.itemUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block bg-navy text-white text-xs font-semibold px-5 py-2 rounded-lg hover:bg-navy-light transition"
-                      >
-                        View on eBay &rarr;
-                      </a>
-                      <a
-                        href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(cleanTitleForSearch(r.title))}&LH_Complete=1&LH_Sold=1&_sop=12&rt=nc`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block border-2 border-gold text-navy text-xs font-bold px-5 py-2 rounded-lg hover:bg-gold/10 transition ml-2"
-                      >
-                        Price Check &rarr;
-                      </a>
-                    </div>
+                  {/* Dismiss */}
+                  <div
+                    className="shrink-0 self-start pt-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dismissResult(r.id);
+                    }}
+                  >
+                    <button
+                      className="text-muted-foreground/20 hover:text-destructive transition p-1"
+                      title="Dismiss"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                   </div>
                 </div>
               ))}

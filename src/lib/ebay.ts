@@ -155,6 +155,36 @@ async function fetchConditionDescriptors(
   return result;
 }
 
+/**
+ * Fetch condition descriptor for a single item. Used by the detail view.
+ * Returns the condition string (e.g. "Near mint or better") or null.
+ */
+export async function fetchSingleItemCondition(
+  ebayItemId: string
+): Promise<string | null> {
+  try {
+    const token = await getEbayToken();
+    const resp = await fetch(`${ITEM_DETAIL_ENDPOINT}/${ebayItemId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
+      },
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const descriptors = data.conditionDescriptors || [];
+    for (const desc of descriptors) {
+      for (const val of desc.values || []) {
+        if (val.content) return val.content;
+      }
+    }
+    // Fallback to basic condition
+    return data.condition || null;
+  } catch {
+    return null;
+  }
+}
+
 // --- Cache helpers ---
 
 export function normalizeKeywords(

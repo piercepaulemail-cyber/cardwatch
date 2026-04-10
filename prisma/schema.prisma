@@ -105,6 +105,7 @@ model ScanResult {
   listingStartTime DateTime
   matchedPlayer    String
   matchedDesc      String
+  conditionDescriptor String?
   scanTimestamp    DateTime @default(now())
 
   @@unique([userId, ebayItemId])

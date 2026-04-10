@@ -1,0 +1,232 @@
+"use client";
+
+import { useEffect, useState, use } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Logo from "@/components/logo";
+
+interface CardDetail {
+  id: string;
+  ebayItemId: string;
+  title: string;
+  currentPrice: number;
+  listingType: string;
+  bidCount: number;
+  sellerName: string;
+  sellerFeedback: number;
+  itemUrl: string;
+  imageUrl: string | null;
+  listingStartTime: string;
+  matchedPlayer: string;
+  matchedDesc: string;
+  conditionDescriptor: string | null;
+  scanTimestamp: string;
+}
+
+function cleanTitleForSearch(title: string): string {
+  return title
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FA9F}\u{200D}\u{20E3}]/gu, "")
+    .replace(/[-!()[\]|*~_]/g, " ")
+    .replace(/\b(NM|EX|VG|MT|MINT|GEM|NEAR MINT|PACK FRESH|CLEAN|HOT|FIRE|LOOK|WOW|RARE|L@@K)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ").slice(0, 12).join(" ");
+}
+
+function timeAgo(iso: string) {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+export default function CardDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [card, setCard] = useState<CardDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/login");
+  }, [status, router]);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    fetch(`/api/results/${id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          router.push("/dashboard");
+          return;
+        }
+        setCard(data);
+        setLoading(false);
+      });
+  }, [session, id, router]);
+
+  async function handleDismiss() {
+    await fetch("/api/results", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    router.push("/dashboard");
+  }
+
+  if (loading || !card) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Nav */}
+      <nav className="bg-navy px-6 py-3 flex justify-between items-center">
+        <Link
+          href="/dashboard"
+          className="text-lg font-bold text-white tracking-tight flex items-center gap-2"
+        >
+          <Logo size={22} />
+          CardWatch
+        </Link>
+      </nav>
+
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* Back */}
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-navy transition mb-4"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to results
+        </button>
+
+        {/* Image */}
+        {card.imageUrl && (
+          <div className="rounded-xl overflow-hidden border border-border mb-6 bg-secondary">
+            <img
+              src={card.imageUrl}
+              alt=""
+              className="w-full max-h-[500px] object-contain"
+            />
+          </div>
+        )}
+
+        {/* Title */}
+        <h1 className="text-xl font-bold text-navy leading-snug mb-4">
+          {card.title}
+        </h1>
+
+        {/* Price + Type + Condition */}
+        <div className="grid grid-cols-3 gap-4 mb-5">
+          <div>
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+              Price
+            </p>
+            <p className="text-3xl font-extrabold text-navy">
+              ${card.currentPrice.toFixed(2)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+              Type
+            </p>
+            <span
+              className={`inline-block px-3 py-1.5 rounded-full text-xs font-semibold ${
+                card.listingType === "Auction"
+                  ? "bg-amber-100 text-amber-800"
+                  : "bg-green/10 text-green"
+              }`}
+            >
+              {card.listingType === "Auction" ? "Auction" : "Buy Now"}
+            </span>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+              Condition
+            </p>
+            <span className="inline-block px-3 py-1.5 rounded-full text-xs font-semibold bg-gold/10 text-gold">
+              {card.conditionDescriptor || "Ungraded"}
+            </span>
+          </div>
+        </div>
+
+        {/* Seller + Bids + Listed */}
+        <div className="grid grid-cols-3 gap-4 mb-5">
+          <div>
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+              Seller
+            </p>
+            <p className="text-sm font-semibold text-navy">{card.sellerName}</p>
+            <p className="text-xs text-muted-foreground">
+              ({card.sellerFeedback})
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+              Bids
+            </p>
+            <p className="text-sm font-semibold text-navy">{card.bidCount}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+              Listed
+            </p>
+            <p className="text-sm font-semibold text-navy">
+              {timeAgo(card.listingStartTime)}
+            </p>
+          </div>
+        </div>
+
+        {/* Matched */}
+        <div className="mb-6">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+            Matched
+          </p>
+          <p className="text-sm font-semibold text-navy">
+            {card.matchedPlayer} — {card.matchedDesc}
+          </p>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <a
+            href={card.itemUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-green text-white font-bold px-6 py-3 rounded-xl hover:bg-green-light transition text-sm flex-1 text-center"
+          >
+            View on eBay &rarr;
+          </a>
+          <a
+            href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(cleanTitleForSearch(card.title))}&LH_Complete=1&LH_Sold=1&_sop=12&rt=nc`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white text-navy font-bold px-6 py-3 rounded-xl border-2 border-gold hover:bg-gold/10 transition text-sm flex-1 text-center"
+          >
+            Price Check &rarr;
+          </a>
+        </div>
+
+        <button
+          onClick={handleDismiss}
+          className="w-full text-sm text-muted-foreground hover:text-destructive transition py-2"
+        >
+          Dismiss this listing
+        </button>
+      </div>
+    </div>
+  );
+}
