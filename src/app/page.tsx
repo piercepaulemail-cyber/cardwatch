@@ -36,41 +36,41 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="bg-navy text-white overflow-hidden">
+      <section className="bg-white overflow-hidden">
         <div className="max-w-6xl mx-auto px-6 py-20 md:py-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left: Copy */}
             <div>
-              <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-6">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                <span className="text-sm text-white/80">Scanning eBay right now</span>
+              <div className="inline-flex items-center gap-2 bg-green/10 rounded-full px-4 py-1.5 mb-6">
+                <span className="w-2 h-2 bg-green rounded-full animate-pulse"></span>
+                <span className="text-sm text-green font-semibold">Scanning eBay right now</span>
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6 text-navy">
                 Don&apos;t Spend Hours
                 <br />
                 Searching eBay.
                 <br />
-                <span className="text-white/60">Let the Deals Come to YOU.</span>
+                <span className="text-green">Let the Deals Come to YOU.</span>
               </h1>
-              <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed max-w-lg">
+              <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-lg">
                 CardWatch scans eBay 24/7 for the exact cards you want — raw, graded, any sport.
                 Get alerted before other collectors even open the app.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   href="/pricing"
-                  className="bg-white text-navy font-bold px-8 py-4 rounded-full text-lg hover:bg-silver-light transition inline-flex items-center gap-2"
+                  className="bg-gold text-navy font-bold px-8 py-4 rounded-full text-lg hover:bg-gold-light transition inline-flex items-center gap-2"
                 >
                   Start free trial &rarr;
                 </Link>
                 <Link
                   href="/login"
-                  className="border border-white/20 text-white font-semibold px-8 py-4 rounded-full text-lg hover:bg-white/5 transition text-center"
+                  className="border-2 border-navy text-navy font-semibold px-8 py-4 rounded-full text-lg hover:bg-navy hover:text-white transition text-center"
                 >
                   Sign in
                 </Link>
               </div>
-              <p className="text-white/40 text-sm mt-4">3-day free trial. Cancel anytime. Plans start at $4.99/mo.</p>
+              <p className="text-muted-foreground text-sm mt-4">3-day free trial. Cancel anytime. Plans start at $4.99/mo.</p>
             </div>
 
             {/* Right: Product mockup */}
