@@ -451,9 +451,9 @@ export default function DashboardPage() {
                   return (
                     <button
                       key={opt.minutes}
-                      disabled={locked}
                       onClick={() => {
-                        if (locked || active) return;
+                        if (locked) { router.push("/pricing"); return; }
+                        if (active) return;
                         setPendingInterval(opt.minutes);
                         setPendingIntervalLabel(opt.label);
                         setShowIntervalConfirm(true);
@@ -476,6 +476,20 @@ export default function DashboardPage() {
                   );
                 })}
               </div>
+              {userTier !== "elite" && (
+                <div className="mt-3 flex items-center justify-between bg-navy/5 rounded-lg px-4 py-2.5">
+                  <p className="text-xs text-navy">
+                    <span className="font-semibold">Want faster scans{userTier === "scout" ? " and more watchlist entries" : ""}?</span>{" "}
+                    Upgrade for access to all features.
+                  </p>
+                  <a
+                    href="/pricing"
+                    className="bg-navy text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-navy-light transition shrink-0 ml-3"
+                  >
+                    Upgrade &rarr;
+                  </a>
+                </div>
+              )}
             </div>
           )}
 
@@ -495,12 +509,15 @@ export default function DashboardPage() {
             </div>
             <div className="relative">
               <button
-                onClick={triggerScan}
-                disabled={scanning || userTier !== "elite"}
+                onClick={() => {
+                  if (userTier !== "elite") { router.push("/pricing"); return; }
+                  triggerScan();
+                }}
+                disabled={scanning}
                 className={`font-semibold px-6 py-2.5 rounded-full text-sm transition ${
                   userTier === "elite"
                     ? "bg-navy text-white hover:bg-navy-light disabled:opacity-50"
-                    : "bg-secondary text-muted-foreground/50 cursor-not-allowed"
+                    : "bg-secondary text-muted-foreground/50 hover:bg-navy hover:text-white"
                 }`}
               >
                 {scanning ? "Scanning..." : "Scan Now"}
