@@ -76,9 +76,9 @@ export default function PricingPage() {
       router.push("/login");
       return;
     }
+    if (tier === currentTier) return;
     setLoading(tier);
 
-    // Try checkout first
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -91,16 +91,8 @@ export default function PricingPage() {
       return;
     }
 
-    // If already subscribed, redirect to Stripe billing portal to change plan
-    if (res.status === 400 && data.error?.includes("already have")) {
-      const portalRes = await fetch("/api/billing/portal", { method: "POST" });
-      const portalData = await portalRes.json();
-      if (portalData.url) {
-        window.location.href = portalData.url;
-        return;
-      }
-    }
-
+    // Show error if something went wrong
+    alert(data.error || "Something went wrong. Please try again.");
     setLoading(null);
   }
 
