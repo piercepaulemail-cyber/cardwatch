@@ -216,6 +216,21 @@ export default function DashboardPage() {
     );
   }
 
+  function cleanTitleForSearch(title: string): string {
+    return title
+      // Remove emojis
+      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FA9F}\u{200D}\u{20E3}]/gu, "")
+      // Remove dashes, exclamation marks, parentheses, brackets, pipes, asterisks
+      .replace(/[-!()[\]|*~_]/g, " ")
+      // Remove condition abbreviations as standalone words
+      .replace(/\b(NM|EX|VG|MT|MINT|GEM|NEAR MINT|PACK FRESH|CLEAN|HOT|FIRE|LOOK|WOW|RARE|L@@K)\b/gi, "")
+      // Collapse multiple spaces
+      .replace(/\s+/g, " ")
+      .trim()
+      // Limit to first 12 words
+      .split(" ").slice(0, 12).join(" ");
+  }
+
   function timeAgo(iso: string) {
     const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
     if (diff < 60) return `${diff}s ago`;
@@ -678,7 +693,7 @@ export default function DashboardPage() {
                         View on eBay &rarr;
                       </a>
                       <a
-                        href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(r.matchedPlayer + " " + r.matchedDesc)}&LH_Complete=1&LH_Sold=1&_sop=12&rt=nc&LH_ItemCondition=4`}
+                        href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(cleanTitleForSearch(r.title))}&LH_Complete=1&LH_Sold=1&_sop=12&rt=nc&LH_ItemCondition=4`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block border-2 border-gold text-navy text-xs font-bold px-5 py-2 rounded-lg hover:bg-gold/10 transition ml-2"

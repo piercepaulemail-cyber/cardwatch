@@ -10,6 +10,16 @@ function esc(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function cleanTitleForSearch(title: string): string {
+  return title
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FA9F}\u{200D}\u{20E3}]/gu, "")
+    .replace(/[-!()[\]|*~_]/g, " ")
+    .replace(/\b(NM|EX|VG|MT|MINT|GEM|NEAR MINT|PACK FRESH|CLEAN|HOT|FIRE|LOOK|WOW|RARE|L@@K)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ").slice(0, 12).join(" ");
+}
+
 function safeUrl(url: string): string {
   if (!url) return "#";
   try {
@@ -58,7 +68,7 @@ function buildEmailHtml(results: EbayResult[]): string {
         </table>
         <div style="margin-top:12px;">
           <a href="${safeUrl(r.itemUrl)}" style="display:inline-block;background:#0B1D3A;color:#FFFFFF;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">View on eBay &rarr;</a>
-          <a href="https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(esc(r.matchedPlayer) + " " + esc(r.matchedDesc))}&LH_Complete=1&LH_Sold=1&_sop=12&rt=nc&LH_ItemCondition=4" style="display:inline-block;background:#FFFFFF;color:#0B1D3A;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;border:2px solid #D4A847;margin-left:8px;">Price Check &rarr;</a>
+          <a href="https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(cleanTitleForSearch(r.title))}&LH_Complete=1&LH_Sold=1&_sop=12&rt=nc&LH_ItemCondition=4" style="display:inline-block;background:#FFFFFF;color:#0B1D3A;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;border:2px solid #D4A847;margin-left:8px;">Price Check &rarr;</a>
         </div>
         </div>
       </div>`
