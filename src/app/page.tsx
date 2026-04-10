@@ -46,11 +46,11 @@ export default function Home() {
                 <span className="text-sm text-white/80">Scanning eBay right now</span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6">
-                The card you want
+                Don&apos;t Spend Hours
                 <br />
-                was just listed.
+                Searching eBay.
                 <br />
-                <span className="text-white/60">Did you see it?</span>
+                <span className="text-white/60">Let the Deals Come to YOU.</span>
               </h1>
               <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed max-w-lg">
                 CardWatch scans eBay 24/7 for the exact cards you want — raw, graded, any sport.

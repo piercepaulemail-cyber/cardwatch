@@ -58,7 +58,7 @@ function buildEmailHtml(results: EbayResult[]): string {
         </table>
         <div style="margin-top:12px;">
           <a href="${safeUrl(r.itemUrl)}" style="display:inline-block;background:#0B1D3A;color:#FFFFFF;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">View on eBay &rarr;</a>
-          <a href="https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(esc(r.title).split(" ").slice(0, 10).join(" "))}&LH_Complete=1&LH_Sold=1&_sop=13" style="display:inline-block;background:#FFFFFF;color:#0B1D3A;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid #E5E8ED;margin-left:8px;">Price Check &rarr;</a>
+          <a href="https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(esc(r.title).split(" ").slice(0, 10).join(" "))}&LH_Complete=1&LH_Sold=1&_sop=13" style="display:inline-block;background:#FFFFFF;color:#0B1D3A;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;border:2px solid #D4A847;margin-left:8px;">Price Check &rarr;</a>
         </div>
         </div>
       </div>`

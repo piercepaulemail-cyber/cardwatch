@@ -316,7 +316,7 @@ export default function DashboardPage() {
                         setListingType(auctionOn ? "auction" : "all");
                       }
                     }}
-                    className="w-4 h-4 rounded border-border accent-navy"
+                    className="w-4 h-4 rounded border-border accent-gold"
                   />
                   <span className="text-sm">Buy It Now</span>
                 </label>
@@ -332,7 +332,7 @@ export default function DashboardPage() {
                         setListingType(binOn ? "buyItNow" : "all");
                       }
                     }}
-                    className="w-4 h-4 rounded border-border accent-navy"
+                    className="w-4 h-4 rounded border-border accent-gold"
                   />
                   <span className="text-sm">Auction</span>
                 </label>
@@ -350,7 +350,7 @@ export default function DashboardPage() {
                       value={opt.value}
                       checked={condition === opt.value}
                       onChange={(e) => setCondition(e.target.value)}
-                      className="w-4 h-4 accent-navy"
+                      className="w-4 h-4 accent-gold"
                     />
                     <span className="text-sm">{opt.label}</span>
                   </label>
@@ -358,7 +358,7 @@ export default function DashboardPage() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-navy text-white font-semibold py-2.5 rounded-lg hover:bg-navy-light transition text-sm"
+                className="w-full bg-green text-white font-semibold py-2.5 rounded-lg hover:bg-green-light transition text-sm"
               >
                 + Add
               </button>
@@ -371,7 +371,7 @@ export default function DashboardPage() {
               <h2 className="text-sm font-bold text-navy uppercase tracking-wide">
                 Watchlist
               </h2>
-              <span className="bg-navy text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-green text-white text-xs font-bold px-2 py-0.5 rounded-full">
                 {watchlist.length}{userTier === "scout" ? "/25" : userTier === "pro" ? "/100" : ""}
               </span>
             </div>
@@ -382,7 +382,7 @@ export default function DashboardPage() {
               {watchlist.map((entry) => (
                 <div
                   key={entry.id}
-                  className="flex items-start justify-between bg-secondary rounded-lg p-3"
+                  className="flex items-start justify-between bg-secondary rounded-lg p-3 border-l-4 border-gold"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-navy truncate">
@@ -460,10 +460,10 @@ export default function DashboardPage() {
                       }}
                       className={`relative px-3.5 py-2 rounded-lg text-xs font-semibold transition ${
                         active
-                          ? "bg-navy text-white"
+                          ? "bg-gold text-navy"
                           : locked
                             ? "bg-secondary text-muted-foreground/40 cursor-not-allowed"
-                            : "bg-secondary text-navy hover:bg-navy hover:text-white"
+                            : "bg-secondary text-navy hover:bg-gold hover:text-navy"
                       }`}
                     >
                       {opt.label}
@@ -484,7 +484,7 @@ export default function DashboardPage() {
                   </p>
                   <a
                     href="/pricing"
-                    className="bg-navy text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-navy-light transition shrink-0 ml-3"
+                    className="bg-green text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-green-light transition shrink-0 ml-3"
                   >
                     Upgrade &rarr;
                   </a>
@@ -502,7 +502,7 @@ export default function DashboardPage() {
                 </span>
               </h2>
               {scanMessage && (
-                <p className="text-sm text-navy font-medium mt-1">
+                <p className="text-sm text-green font-medium mt-1">
                   {scanMessage}
                 </p>
               )}
@@ -516,8 +516,8 @@ export default function DashboardPage() {
                 disabled={scanning}
                 className={`font-semibold px-6 py-2.5 rounded-full text-sm transition ${
                   userTier === "elite"
-                    ? "bg-navy text-white hover:bg-navy-light disabled:opacity-50"
-                    : "bg-secondary text-muted-foreground/50 hover:bg-navy hover:text-white"
+                    ? "bg-green text-white hover:bg-green-light disabled:opacity-50"
+                    : "bg-secondary text-muted-foreground/50 hover:bg-green hover:text-white"
                 }`}
               >
                 {scanning ? "Scanning..." : "Scan Now"}
@@ -607,7 +607,7 @@ export default function DashboardPage() {
                         type="checkbox"
                         checked={selectedIds.has(r.id)}
                         onChange={() => toggleSelect(r.id)}
-                        className="w-4 h-4 accent-navy rounded mt-1 shrink-0"
+                        className="w-4 h-4 accent-gold rounded mt-1 shrink-0"
                       />
                       <a
                         href={r.itemUrl}
@@ -681,7 +681,7 @@ export default function DashboardPage() {
                         href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(r.title.split(" ").slice(0, 10).join(" "))}&LH_Complete=1&LH_Sold=1&_sop=13`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block border border-border text-navy text-xs font-semibold px-5 py-2 rounded-lg hover:bg-secondary transition ml-2"
+                        className="inline-block border-2 border-gold text-navy text-xs font-bold px-5 py-2 rounded-lg hover:bg-gold/10 transition ml-2"
                       >
                         Price Check &rarr;
                       </a>

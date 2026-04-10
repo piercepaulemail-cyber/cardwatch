@@ -172,7 +172,7 @@ export default function PricingPage() {
               )}
 
               {/* 40% off badge */}
-              <div className="absolute -top-3 -right-3 bg-green-500 text-white font-bold px-2.5 py-1 rounded-full text-[10px]">
+              <div className="absolute -top-3 -right-3 bg-gold text-navy font-bold px-2.5 py-1 rounded-full text-[10px]">
                 40% OFF
               </div>
 
@@ -223,9 +223,9 @@ export default function PricingPage() {
               </ul>
               <button
                 className={`w-full py-3 rounded-full font-semibold text-sm transition ${
-                  tier.popular
-                    ? "bg-navy text-white hover:bg-navy-light"
-                    : "bg-navy text-white hover:bg-navy-light"
+                  currentTier === tier.key
+                    ? "bg-secondary text-muted-foreground"
+                    : "bg-green text-white hover:bg-green-light"
                 }`}
                 disabled={loading === tier.key || currentTier === tier.key}
                 onClick={() => handleSubscribe(tier.key)}
