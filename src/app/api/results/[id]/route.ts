@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireSubscription } from "@/lib/require-subscription";
-import { fetchSingleItemCondition } from "@/lib/ebay";
+import { fetchItemDetails } from "@/lib/ebay";
 
 export async function GET(
   _request: NextRequest,
@@ -28,20 +28,30 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Fetch condition if not already cached
+  // Fetch details from eBay (condition + all images)
   let condition = result.conditionDescriptor;
-  if (!condition) {
-    condition = await fetchSingleItemCondition(result.ebayItemId);
-    if (condition) {
-      await prisma.scanResult.update({
-        where: { id },
-        data: { conditionDescriptor: condition },
-      }).catch(() => {});
-    }
+  let images: string[] = [];
+
+  const details = await fetchItemDetails(result.ebayItemId);
+  images = details.images;
+
+  if (!condition && details.condition) {
+    condition = details.condition;
+    // Cache the condition
+    await prisma.scanResult.update({
+      where: { id },
+      data: { conditionDescriptor: condition },
+    }).catch(() => {});
+  }
+
+  // If no images from getItem, use the stored thumbnail
+  if (images.length === 0 && result.imageUrl) {
+    images = [result.imageUrl.replace(/s-l\d+\./, "s-l1600.")];
   }
 
   return NextResponse.json({
     ...result,
     conditionDescriptor: condition,
+    images,
   });
 }

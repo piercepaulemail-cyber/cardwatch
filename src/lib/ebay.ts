@@ -156,12 +156,12 @@ async function fetchConditionDescriptors(
 }
 
 /**
- * Fetch condition descriptor for a single item. Used by the detail view.
- * Returns the condition string (e.g. "Near mint or better") or null.
+ * Fetch item details (condition + all images) for the detail view.
+ * Returns condition string and array of all image URLs.
  */
-export async function fetchSingleItemCondition(
+export async function fetchItemDetails(
   ebayItemId: string
-): Promise<string | null> {
+): Promise<{ condition: string | null; images: string[] }> {
   try {
     const token = await getEbayToken();
     const resp = await fetch(`${ITEM_DETAIL_ENDPOINT}/${ebayItemId}`, {
@@ -170,18 +170,34 @@ export async function fetchSingleItemCondition(
         "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
       },
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) return { condition: null, images: [] };
     const data = await resp.json();
+
+    // Get condition
+    let condition: string | null = null;
     const descriptors = data.conditionDescriptors || [];
     for (const desc of descriptors) {
       for (const val of desc.values || []) {
-        if (val.content) return val.content;
+        if (val.content) { condition = val.content; break; }
+      }
+      if (condition) break;
+    }
+    if (!condition) condition = data.condition || null;
+
+    // Get all images (main + additional) in high resolution
+    const images: string[] = [];
+    if (data.image?.imageUrl) {
+      images.push(data.image.imageUrl.replace(/s-l\d+\./, "s-l1600."));
+    }
+    for (const img of data.additionalImages || []) {
+      if (img.imageUrl) {
+        images.push(img.imageUrl.replace(/s-l\d+\./, "s-l1600."));
       }
     }
-    // Fallback to basic condition
-    return data.condition || null;
+
+    return { condition, images };
   } catch {
-    return null;
+    return { condition: null, images: [] };
   }
 }
 

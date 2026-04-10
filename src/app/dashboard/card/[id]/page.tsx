@@ -22,6 +22,7 @@ interface CardDetail {
   matchedDesc: string;
   conditionDescriptor: string | null;
   scanTimestamp: string;
+  images: string[];
 }
 
 function hdImage(url: string | null): string {
@@ -57,6 +58,7 @@ export default function CardDetailPage({
   const router = useRouter();
   const [card, setCard] = useState<CardDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imgIndex, setImgIndex] = useState(0);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -118,14 +120,58 @@ export default function CardDetailPage({
           Back to results
         </button>
 
-        {/* Image */}
-        {card.imageUrl && (
-          <div className="rounded-xl overflow-hidden border border-border mb-6 bg-secondary">
-            <img
-              src={hdImage(card.imageUrl)}
-              alt=""
-              className="w-full max-h-[500px] object-contain"
-            />
+        {/* Image gallery */}
+        {card.images && card.images.length > 0 && (
+          <div className="mb-6">
+            {/* Main image */}
+            <div className="relative rounded-xl overflow-hidden border border-border bg-secondary">
+              <img
+                src={card.images[imgIndex]}
+                alt=""
+                className="w-full max-h-[500px] object-contain"
+              />
+              {/* Navigation arrows */}
+              {card.images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setImgIndex((prev) => (prev === 0 ? card.images.length - 1 : prev - 1))}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition"
+                  >
+                    <svg className="w-5 h-5 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  <button
+                    onClick={() => setImgIndex((prev) => (prev === card.images.length - 1 ? 0 : prev + 1))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition"
+                  >
+                    <svg className="w-5 h-5 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                  {/* Dots */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                    {card.images.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setImgIndex(i)}
+                        className={`w-2 h-2 rounded-full transition ${i === imgIndex ? "bg-navy" : "bg-white/60"}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Thumbnail strip */}
+            {card.images.length > 1 && (
+              <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+                {card.images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setImgIndex(i)}
+                    className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition ${i === imgIndex ? "border-gold" : "border-border"}`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
