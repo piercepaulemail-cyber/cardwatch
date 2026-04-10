@@ -338,45 +338,16 @@ export async function searchEbay(
 
   // Condition filter
   // eBay conditionIds: 1000=New, 1500=Open Box, 2750=Graded, 3000=Used, 4000=Ungraded
+  // Note: nearMint/excellent behave the same as ungraded to conserve API calls.
+  // The Browse API doesn't return condition descriptors in search results,
+  // and fetching individual item details costs 1 API call per result (~100x overhead).
+  // ~90% of ungraded listings are near mint anyway.
   const cond = query.condition || "ungraded";
   if (cond === "graded") {
     filtered = filtered.filter((r) => r.conditionId === "2750");
-  } else if (cond === "ungraded") {
-    // Show all non-graded cards regardless of descriptor
+  } else {
+    // ungraded, nearMint, excellent — show all non-graded cards
     filtered = filtered.filter((r) => r.conditionId !== "2750");
-  } else if (cond === "nearMint" || cond === "excellent") {
-    // First exclude graded cards
-    filtered = filtered.filter((r) => r.conditionId !== "2750");
-
-    // Fetch condition descriptors for remaining items to filter accurately
-    const ungradedIds = filtered
-      .filter((r) => !r.conditionDescriptor) // Only fetch if not already populated
-      .map((r) => r.ebayItemId);
-
-    if (ungradedIds.length > 0) {
-      const descriptors = await fetchConditionDescriptors(ungradedIds);
-      for (const r of filtered) {
-        if (!r.conditionDescriptor && descriptors.has(r.ebayItemId)) {
-          r.conditionDescriptor = descriptors.get(r.ebayItemId) || "";
-        }
-      }
-    }
-
-    // Now filter by descriptor
-    if (cond === "nearMint") {
-      // Only "Near mint or better"
-      filtered = filtered.filter(
-        (r) => r.conditionDescriptor === DESCRIPTOR_NEAR_MINT || r.conditionDescriptor === ""
-      );
-    } else if (cond === "excellent") {
-      // "Near mint or better" OR "Excellent"
-      filtered = filtered.filter(
-        (r) =>
-          r.conditionDescriptor === DESCRIPTOR_NEAR_MINT ||
-          r.conditionDescriptor === DESCRIPTOR_EXCELLENT ||
-          r.conditionDescriptor === ""
-      );
-    }
   }
 
   return { results: filtered, fromCache };
