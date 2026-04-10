@@ -54,15 +54,25 @@ model Subscription {
   id                   String    @id @default(cuid())
   userId               String    @unique
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripeCustomerId     String    @unique
-  stripeSubscriptionId String    @unique
-  stripePriceId        String
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  stripePriceId        String?
   tier                 String    // scout, pro, elite
   scanIntervalMinutes  Int       // 180, 60, 15
   status               String    // trialing, active, canceled, past_due
   trialEndsAt          DateTime?
   currentPeriodEnd     DateTime
   lastScanAt           DateTime?
+}
+
+model InviteCode {
+  id           String    @id @default(cuid())
+  code         String    @unique
+  tier         String    @default("elite")
+  durationDays Int       @default(0)
+  usedAt       DateTime?
+  usedByUserId String?
+  createdAt    DateTime  @default(now())
 }
 
 model WatchlistEntry {

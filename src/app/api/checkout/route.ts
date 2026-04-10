@@ -32,9 +32,11 @@ export async function POST(request: Request) {
 
   if (existingSub && ["active", "trialing"].includes(existingSub.status)) {
     // If upgrading/switching plans, cancel old subscription and create new checkout
-    if (existingSub.tier !== tier && existingSub.stripeSubscriptionId !== "admin_sub") {
+    if (existingSub.tier !== tier) {
       try {
-        await getStripe().subscriptions.cancel(existingSub.stripeSubscriptionId);
+        if (existingSub.stripeSubscriptionId && existingSub.stripeSubscriptionId !== "admin_sub") {
+          await getStripe().subscriptions.cancel(existingSub.stripeSubscriptionId);
+        }
         await prisma.subscription.delete({ where: { id: existingSub.id } });
       } catch (e) {
         console.error("Failed to cancel old subscription:", e);
