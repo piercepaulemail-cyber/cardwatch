@@ -341,8 +341,6 @@ export default function DashboardPage() {
                 <p className="text-xs font-medium text-muted-foreground">Condition</p>
                 {[
                   { value: "ungraded", label: "Ungraded (Raw)" },
-                  { value: "nearMint", label: "Near Mint or Better" },
-                  { value: "excellent", label: "Excellent" },
                   { value: "graded", label: "Graded (PSA, BGS, SGC)" },
                 ].map((opt) => (
                   <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
@@ -409,9 +407,9 @@ export default function DashboardPage() {
                           {entry.listingType === "buyItNow" ? "BIN Only" : "Auction Only"}
                         </span>
                       )}
-                      {entry.condition && entry.condition !== "ungraded" && (
+                      {entry.condition && entry.condition !== "ungraded" && entry.condition !== "nearMint" && entry.condition !== "excellent" && (
                         <span className="text-[10px] bg-navy/10 px-1.5 py-0.5 rounded font-medium">
-                          {entry.condition === "nearMint" ? "Near Mint+" : entry.condition === "excellent" ? "Excellent" : "Graded"}
+                          Graded
                         </span>
                       )}
                     </div>
