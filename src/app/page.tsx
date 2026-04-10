@@ -76,7 +76,7 @@ export default function Home() {
             {/* Right: Product mockup */}
             <div className="hidden md:block relative">
               {/* Main dashboard card */}
-              <div className="bg-white rounded-2xl shadow-2xl shadow-black/30 overflow-hidden transform rotate-1 relative z-10">
+              <div className="bg-white rounded-2xl shadow-2xl shadow-navy/20 overflow-hidden transform rotate-1 relative z-10 border border-border">
                 {/* Mini nav */}
                 <div className="bg-[#0B1D3A] px-4 py-2.5 flex items-center justify-between">
                   <span className="text-white text-xs font-bold">CardWatch Dashboard</span>
@@ -97,31 +97,31 @@ export default function Home() {
                 <div className="divide-y divide-gray-100">
                   <div className="px-4 py-3 flex gap-4 items-center text-xs bg-white">
                     <span className="flex-1 font-semibold text-[#0B1D3A] truncate">2025 Prizm Silver Jaxson Dart RC #332</span>
-                    <span className="w-16 font-bold text-green-600">$12.99</span>
+                    <span className="w-16 font-bold text-green">$12.99</span>
                     <span className="w-14"><span className="bg-[#0B1D3A]/10 text-[#0B1D3A] px-1.5 py-0.5 rounded text-[10px] font-semibold">BIN</span></span>
                     <span className="w-20 text-gray-500 truncate">cardpro99</span>
                   </div>
                   <div className="px-4 py-3 flex gap-4 items-center text-xs bg-gray-50">
                     <span className="flex-1 font-semibold text-[#0B1D3A] truncate">Cooper Flagg 2025 Topps Chrome X-Fractor</span>
-                    <span className="w-16 font-bold text-green-600">$499.99</span>
+                    <span className="w-16 font-bold text-green">$499.99</span>
                     <span className="w-14"><span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-semibold">BID</span></span>
                     <span className="w-20 text-gray-500 truncate">lincoln-lou</span>
                   </div>
                   <div className="px-4 py-3 flex gap-4 items-center text-xs bg-white">
                     <span className="flex-1 font-semibold text-[#0B1D3A] truncate">Wemby 2024 Mosaic Reactive Blue PSA 10</span>
-                    <span className="w-16 font-bold text-green-600">$89.00</span>
+                    <span className="w-16 font-bold text-green">$89.00</span>
                     <span className="w-14"><span className="bg-[#0B1D3A]/10 text-[#0B1D3A] px-1.5 py-0.5 rounded text-[10px] font-semibold">BIN</span></span>
                     <span className="w-20 text-gray-500 truncate">sportsking</span>
                   </div>
                   <div className="px-4 py-3 flex gap-4 items-center text-xs bg-gray-50">
                     <span className="flex-1 font-semibold text-[#0B1D3A] truncate">Caleb Williams Optic Rated Rookie Holo</span>
-                    <span className="w-16 font-bold text-green-600">$34.50</span>
+                    <span className="w-16 font-bold text-green">$34.50</span>
                     <span className="w-14"><span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-semibold">BID</span></span>
                     <span className="w-20 text-gray-500 truncate">ripz_cards</span>
                   </div>
                   <div className="px-4 py-3 flex gap-4 items-center text-xs bg-white">
                     <span className="flex-1 font-semibold text-[#0B1D3A] truncate">Jayden Daniels Prizm Purple Pulsar /75</span>
-                    <span className="w-16 font-bold text-green-600">$142.00</span>
+                    <span className="w-16 font-bold text-green">$142.00</span>
                     <span className="w-14"><span className="bg-[#0B1D3A]/10 text-[#0B1D3A] px-1.5 py-0.5 rounded text-[10px] font-semibold">BIN</span></span>
                     <span className="w-20 text-gray-500 truncate">hobbybox22</span>
                   </div>
@@ -129,7 +129,7 @@ export default function Home() {
               </div>
 
               {/* Floating email alert card */}
-              <div className="absolute -bottom-4 -left-8 bg-white rounded-xl shadow-xl shadow-black/20 p-3.5 w-64 transform -rotate-3 z-20 border border-gray-100">
+              <div className="absolute -bottom-4 -left-8 bg-white rounded-xl shadow-xl shadow-navy/15 p-3.5 w-64 transform -rotate-3 z-20 border border-gray-100">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-7 h-7 bg-[#0B1D3A] rounded-lg flex items-center justify-center">
                     <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
@@ -147,24 +147,24 @@ export default function Home() {
               </div>
 
               {/* Floating scan status pill */}
-              <div className="absolute -top-2 -right-4 bg-white rounded-full shadow-lg shadow-black/15 px-4 py-2 flex items-center gap-2 z-20">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+              <div className="absolute -top-2 -right-4 bg-white rounded-full shadow-lg shadow-navy/10 px-4 py-2 flex items-center gap-2 z-20">
+                <span className="w-2 h-2 bg-green rounded-full animate-pulse"></span>
                 <span className="text-[11px] font-semibold text-[#0B1D3A]">Scan complete — 5 found</span>
               </div>
 
               {/* Floating watchlist card */}
-              <div className="absolute top-12 -right-6 bg-white rounded-xl shadow-lg shadow-black/15 p-3 w-48 transform rotate-2 z-20 border border-gray-100">
+              <div className="absolute top-12 -right-6 bg-white rounded-xl shadow-lg shadow-navy/10 p-3 w-48 transform rotate-2 z-20 border border-gray-100">
                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-2">Watchlist</p>
                 <div className="space-y-1.5">
-                  <div className="bg-gray-50 rounded px-2 py-1.5">
+                  <div className="bg-gray-50 rounded px-2 py-1.5 border-l-2 border-gold">
                     <p className="text-[10px] font-bold text-[#0B1D3A]">Jaxson Dart</p>
                     <p className="text-[9px] text-gray-400">Prizm Silver</p>
                   </div>
-                  <div className="bg-gray-50 rounded px-2 py-1.5">
+                  <div className="bg-gray-50 rounded px-2 py-1.5 border-l-2 border-gold">
                     <p className="text-[10px] font-bold text-[#0B1D3A]">Cooper Flagg</p>
                     <p className="text-[9px] text-gray-400">Topps Chrome X-Fractor</p>
                   </div>
-                  <div className="bg-gray-50 rounded px-2 py-1.5">
+                  <div className="bg-gray-50 rounded px-2 py-1.5 border-l-2 border-gold">
                     <p className="text-[10px] font-bold text-[#0B1D3A]">Wemby</p>
                     <p className="text-[9px] text-gray-400">Mosaic PSA 10</p>
                   </div>
@@ -268,7 +268,7 @@ export default function Home() {
                 </div>
                 <div className="bg-white/10 rounded-xl p-5">
                   <p className="text-white/60 text-xs uppercase tracking-wide mb-1">Your profit</p>
-                  <p className="text-3xl font-extrabold text-green-400">+$135</p>
+                  <p className="text-3xl font-extrabold text-green">+$135</p>
                   <p className="text-white/50 text-sm mt-1">One flip = 27x your monthly cost</p>
                 </div>
               </div>
@@ -311,8 +311,9 @@ export default function Home() {
                       <span className="bg-navy/10 px-2 py-0.5 rounded-full font-medium">Buy Now</span>
                       <span>Seller: cardking99 (2,847)</span>
                     </div>
-                    <div className="mt-3 inline-block bg-navy text-white text-xs font-semibold px-3 py-1.5 rounded">
-                      View on eBay &rarr;
+                    <div className="flex gap-2 mt-3">
+                      <span className="inline-block bg-navy text-white text-[9px] font-semibold px-2.5 py-1 rounded">View on eBay &rarr;</span>
+                      <span className="inline-block bg-white text-navy text-[9px] font-bold px-2.5 py-1 rounded border-2 border-gold">Price Check &rarr;</span>
                     </div>
                   </div>
                 </div>
@@ -336,8 +337,8 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="border border-border rounded-2xl p-6 hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-navy/5 rounded-xl flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <div className="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </div>
               <h3 className="text-lg font-bold text-navy mb-2">Smart Scanning</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -346,8 +347,8 @@ export default function Home() {
             </div>
 
             <div className="border border-border rounded-2xl p-6 hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-navy/5 rounded-xl flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              <div className="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
               </div>
               <h3 className="text-lg font-bold text-navy mb-2">Email Alerts with Photos</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -356,8 +357,8 @@ export default function Home() {
             </div>
 
             <div className="border border-border rounded-2xl p-6 hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-navy/5 rounded-xl flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+              <div className="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
               </div>
               <h3 className="text-lg font-bold text-navy mb-2">Advanced Filters</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -366,8 +367,8 @@ export default function Home() {
             </div>
 
             <div className="border border-border rounded-2xl p-6 hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-navy/5 rounded-xl flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+              <div className="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
               </div>
               <h3 className="text-lg font-bold text-navy mb-2">Custom Watchlists</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -376,8 +377,8 @@ export default function Home() {
             </div>
 
             <div className="border border-border rounded-2xl p-6 hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-navy/5 rounded-xl flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+              <div className="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
               </div>
               <h3 className="text-lg font-bold text-navy mb-2">Seller Intelligence</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -386,8 +387,8 @@ export default function Home() {
             </div>
 
             <div className="border border-border rounded-2xl p-6 hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-navy/5 rounded-xl flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
+              <div className="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
               </div>
               <h3 className="text-lg font-bold text-navy mb-2">Price Check</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -453,7 +454,7 @@ export default function Home() {
           </p>
           <Link
             href="/pricing"
-            className="bg-white text-navy font-bold px-10 py-4 rounded-full text-lg hover:bg-silver-light transition inline-flex items-center gap-2"
+            className="bg-gold text-navy font-bold px-10 py-4 rounded-full text-lg hover:bg-gold-light transition inline-flex items-center gap-2"
           >
             Start your free trial &rarr;
           </Link>
