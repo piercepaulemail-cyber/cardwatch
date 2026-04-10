@@ -50,6 +50,7 @@ export async function POST(request: Request) {
   const checkoutSession = await getStripe().checkout.sessions.create({
     customer_email: session.user.email,
     mode: "subscription",
+    allow_promotion_codes: true,
     line_items: [
       {
         price_data: {
