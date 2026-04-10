@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Logo from "@/components/logo";
 
@@ -60,6 +60,16 @@ export default function PricingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
   const [annual, setAnnual] = useState(false);
+  const [currentTier, setCurrentTier] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    fetch("/api/subscription")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.active) setCurrentTier(data.tier);
+      });
+  }, [session]);
 
   async function handleSubscribe(tier: string) {
     if (!session) {
@@ -225,12 +235,16 @@ export default function PricingPage() {
                     ? "bg-navy text-white hover:bg-navy-light"
                     : "bg-navy text-white hover:bg-navy-light"
                 }`}
-                disabled={loading === tier.key}
+                disabled={loading === tier.key || currentTier === tier.key}
                 onClick={() => handleSubscribe(tier.key)}
               >
                 {loading === tier.key
                   ? "Redirecting..."
-                  : "Start free trial"}
+                  : currentTier === tier.key
+                    ? "Current plan"
+                    : currentTier
+                      ? "Switch to this plan"
+                      : "Start free trial"}
               </button>
             </div>
           ))}

@@ -31,13 +31,23 @@ export async function POST(request: Request) {
   });
 
   if (existingSub && ["active", "trialing"].includes(existingSub.status)) {
-    return NextResponse.json(
-      {
-        error:
-          "You already have an active subscription. Manage it from your dashboard.",
-      },
-      { status: 400 }
-    );
+    // If upgrading/switching plans, cancel old subscription and create new checkout
+    if (existingSub.tier !== tier && existingSub.stripeSubscriptionId !== "admin_sub") {
+      try {
+        await getStripe().subscriptions.cancel(existingSub.stripeSubscriptionId);
+        await prisma.subscription.delete({ where: { id: existingSub.id } });
+      } catch (e) {
+        console.error("Failed to cancel old subscription:", e);
+      }
+    } else if (existingSub.tier === tier) {
+      return NextResponse.json(
+        { error: "You are already on this plan." },
+        { status: 400 }
+      );
+    } else {
+      // Admin/manual subscriptions can't be managed via Stripe
+      await prisma.subscription.delete({ where: { id: existingSub.id } });
+    }
   }
 
   const isAnnual = annual === true;
