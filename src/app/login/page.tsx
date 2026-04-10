@@ -17,6 +17,9 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("verified") === "true") {
@@ -27,10 +30,22 @@ function LoginForm() {
     }
   }, [searchParams]);
 
+  async function handleResendVerification() {
+    setResending(true);
+    await fetch("/api/auth/resend-verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: verificationEmail }),
+    });
+    setResending(false);
+    setSuccess("Verification email resent! Check your inbox and spam folder.");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setShowVerification(false);
     setLoading(true);
 
     if (!isLogin) {
@@ -46,8 +61,8 @@ function LoginForm() {
         return;
       }
       if (data.needsVerification) {
-        setError("");
-        setSuccess("Check your email! We sent a verification link to " + email);
+        setVerificationEmail(email);
+        setShowVerification(true);
         setLoading(false);
         return;
       }
@@ -60,17 +75,94 @@ function LoginForm() {
     });
 
     setLoading(false);
+
     if (result?.error) {
-      // NextAuth passes the error message from authorize() throw
-      const msg = result.error;
-      if (msg.includes("locked") || msg.includes("verify")) {
-        setError(msg);
+      // Check if user exists but is unverified
+      const checkRes = await fetch("/api/auth/check-verified", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const checkData = await checkRes.json();
+
+      if (checkData.exists && !checkData.verified) {
+        setVerificationEmail(email);
+        setShowVerification(true);
+        setError("Please verify your email before signing in.");
       } else {
         setError("Invalid email or password");
       }
     } else {
       router.push("/dashboard");
     }
+  }
+
+  // Full-screen verification prompt
+  if (showVerification) {
+    return (
+      <div className="min-h-screen bg-navy flex flex-col">
+        <nav className="px-6 py-4">
+          <Link href="/" className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <Logo size={22} />
+            CardWatch
+          </Link>
+        </nav>
+        <div className="flex-1 flex items-center justify-center px-4 pb-16">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center">
+            <div className="w-16 h-16 bg-navy/10 rounded-full flex items-center justify-center mx-auto mb-5">
+              <svg className="w-8 h-8 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-extrabold text-navy mb-2">
+              Check your email
+            </h2>
+            <p className="text-muted-foreground mb-2">
+              We sent a verification link to:
+            </p>
+            <p className="font-semibold text-navy mb-6">
+              {verificationEmail}
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Click the link in the email to verify your account, then come back here to sign in.
+              Check your spam folder if you don&apos;t see it.
+            </p>
+
+            {error && (
+              <div className="bg-destructive/10 text-destructive text-sm font-medium px-4 py-2 rounded-xl mb-4">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-50 text-green-700 text-sm font-medium px-4 py-2 rounded-xl mb-4">
+                {success}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <button
+                onClick={handleResendVerification}
+                disabled={resending}
+                className="w-full border-2 border-border text-navy font-semibold py-3 rounded-full hover:bg-secondary transition text-sm"
+              >
+                {resending ? "Sending..." : "Resend verification email"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowVerification(false);
+                  setError("");
+                  setSuccess("");
+                  setIsLogin(true);
+                }}
+                className="w-full text-muted-foreground hover:text-navy text-sm transition"
+              >
+                Back to sign in
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -185,6 +277,7 @@ function LoginForm() {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setError("");
+                setSuccess("");
               }}
             >
               {isLogin ? "Sign up" : "Sign in"}
