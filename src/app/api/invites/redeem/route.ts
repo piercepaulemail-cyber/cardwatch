@@ -80,5 +80,11 @@ export async function POST(request: Request) {
     data: { usedAt: new Date(), usedByUserId: session.user.id },
   });
 
+  // Auto-verify email for invited users
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { emailVerified: new Date() },
+  });
+
   return NextResponse.json({ success: true, tier });
 }
