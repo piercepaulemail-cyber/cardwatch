@@ -230,7 +230,7 @@ export default function Home() {
               <ul className="space-y-2.5 text-sm text-green-800">
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> eBay scanned automatically 24/7</li>
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Email alert with photo, price, and direct link</li>
-                <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> See new listings before anyone else</li>
+                <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Get notified as new listings appear</li>
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Filter by condition: raw, graded, near mint</li>
                 <li className="flex items-start gap-2"><span className="mt-0.5">&#10003;</span> Sort by price, seller rating, bids — find the edge</li>
               </ul>
@@ -341,7 +341,7 @@ export default function Home() {
               </div>
               <h3 className="text-lg font-bold text-navy mb-2">Smart Scanning</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Scans eBay 24/7 so you never miss a listing. Choose your frequency. Raw cards, graded slabs, any sport, any player.
+                Scans eBay 24/7 so you don&apos;t have to. Choose your frequency. Raw cards, graded slabs, any sport, any player.
               </p>
             </div>
 
@@ -369,9 +369,9 @@ export default function Home() {
               <div className="w-12 h-12 bg-navy/5 rounded-xl flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
               </div>
-              <h3 className="text-lg font-bold text-navy mb-2">Unlimited Watchlists</h3>
+              <h3 className="text-lg font-bold text-navy mb-2">Custom Watchlists</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Track as many players and card types as you want. Jaxson Dart Prizm, Cooper Flagg Bowman, Wemby Mosaic — add them all.
+                Build watchlists for the players and card types you care about. Jaxson Dart Prizm, Cooper Flagg Bowman, Wemby Mosaic — add them all.
               </p>
             </div>
 
@@ -387,11 +387,11 @@ export default function Home() {
 
             <div className="border border-border rounded-2xl p-6 hover:shadow-lg transition">
               <div className="w-12 h-12 bg-navy/5 rounded-xl flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                <svg className="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
               </div>
-              <h3 className="text-lg font-bold text-navy mb-2">Works on Mobile</h3>
+              <h3 className="text-lg font-bold text-navy mb-2">Price Check</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Get alerts on your phone. Open the email, click the link, buy the card — all from wherever you are. No app download needed.
+                One-click price check on every listing. See what the same card sold for recently so you can buy with confidence.
               </p>
             </div>
           </div>
@@ -448,7 +448,7 @@ export default function Home() {
             Let CardWatch do the work.
           </h2>
           <p className="text-white/60 text-lg mb-8 max-w-xl mx-auto">
-            Join thousands of collectors who never miss a listing.
+            Join collectors who stay ahead of the market.
             Start your 3-day free trial today — no credit card charged until it ends.
           </p>
           <Link
