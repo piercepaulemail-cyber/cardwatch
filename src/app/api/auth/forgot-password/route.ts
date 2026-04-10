@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   // Always return success to prevent email enumeration
   const user = await prisma.user.findUnique({ where: { email: trimmed } });
 
-  if (user && user.passwordHash) {
+  if (user) {
     const token = await createPasswordResetToken(trimmed);
     await sendPasswordResetEmail(trimmed, token);
   }
