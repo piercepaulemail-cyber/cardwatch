@@ -20,6 +20,10 @@ function LoginForm() {
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [resending, setResending] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("verified") === "true") {
@@ -29,6 +33,18 @@ function LoginForm() {
       setError("Verification link is invalid or expired.");
     }
   }, [searchParams]);
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setForgotLoading(true);
+    await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: forgotEmail }),
+    });
+    setForgotLoading(false);
+    setForgotSent(true);
+  }
 
   async function handleResendVerification() {
     setResending(true);
@@ -95,6 +111,80 @@ function LoginForm() {
     } else {
       router.push("/dashboard");
     }
+  }
+
+  // Forgot password screen
+  if (showForgot) {
+    return (
+      <div className="min-h-screen bg-navy flex flex-col">
+        <nav className="px-6 py-4">
+          <Link href="/" className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <Logo size={22} />
+            CardWatch
+          </Link>
+        </nav>
+        <div className="flex-1 flex items-center justify-center px-4 pb-16">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+            {forgotSent ? (
+              <div className="text-center">
+                <div className="w-16 h-16 bg-navy/10 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <svg className="w-8 h-8 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-extrabold text-navy mb-2">Check your email</h2>
+                <p className="text-muted-foreground mb-6">
+                  If an account exists for <strong className="text-navy">{forgotEmail}</strong>, we sent a password reset link. Check your inbox and spam folder.
+                </p>
+                <button
+                  onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(""); }}
+                  className="text-navy font-semibold hover:underline text-sm"
+                >
+                  Back to sign in
+                </button>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-2xl font-extrabold text-navy text-center mb-1">
+                  Forgot password?
+                </h2>
+                <p className="text-sm text-muted-foreground text-center mb-6">
+                  Enter your email and we&apos;ll send you a reset link
+                </p>
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-navy block mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      className="w-full px-4 py-3 rounded-xl border-2 border-border text-sm focus:border-navy focus:outline-none transition"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="w-full bg-navy text-white font-bold py-3 rounded-full hover:bg-navy-light transition text-sm"
+                  >
+                    {forgotLoading ? "Sending..." : "Send reset link"}
+                  </button>
+                </form>
+                <p className="text-center text-sm text-muted-foreground mt-6">
+                  <button
+                    onClick={() => setShowForgot(false)}
+                    className="text-navy font-semibold hover:underline"
+                  >
+                    Back to sign in
+                  </button>
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Full-screen verification prompt
@@ -246,6 +336,15 @@ function LoginForm() {
                 required
                 className="w-full px-4 py-3 rounded-xl border-2 border-border text-sm focus:border-navy focus:outline-none transition"
               />
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={() => { setShowForgot(true); setForgotEmail(email); }}
+                  className="text-xs text-muted-foreground hover:text-navy transition mt-1"
+                >
+                  Forgot password?
+                </button>
+              )}
             </div>
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm font-medium px-4 py-2 rounded-xl">
