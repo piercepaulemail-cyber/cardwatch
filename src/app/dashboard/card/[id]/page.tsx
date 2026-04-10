@@ -24,6 +24,11 @@ interface CardDetail {
   scanTimestamp: string;
 }
 
+function hdImage(url: string | null): string {
+  if (!url) return "";
+  return url.replace(/s-l\d+\./, "s-l1600.");
+}
+
 function cleanTitleForSearch(title: string): string {
   return title
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FA9F}\u{200D}\u{20E3}]/gu, "")
@@ -117,7 +122,7 @@ export default function CardDetailPage({
         {card.imageUrl && (
           <div className="rounded-xl overflow-hidden border border-border mb-6 bg-secondary">
             <img
-              src={card.imageUrl}
+              src={hdImage(card.imageUrl)}
               alt=""
               className="w-full max-h-[500px] object-contain"
             />

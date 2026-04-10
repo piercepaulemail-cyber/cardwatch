@@ -216,6 +216,11 @@ export default function DashboardPage() {
     );
   }
 
+  function hdImage(url: string | null): string {
+    if (!url) return "";
+    return url.replace(/s-l\d+\./, "s-l500.");
+  }
+
   function cleanTitleForSearch(title: string): string {
     return title
       // Remove emojis
@@ -619,7 +624,7 @@ export default function DashboardPage() {
                     </div>
                     {r.imageUrl ? (
                       <img
-                        src={r.imageUrl}
+                        src={hdImage(r.imageUrl)}
                         alt=""
                         className="w-[100px] h-[100px] object-cover rounded-lg border border-border bg-secondary"
                       />
