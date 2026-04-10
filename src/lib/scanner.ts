@@ -29,7 +29,10 @@ export async function scanForUser(userId: string, lookbackMinutes: number) {
     condition: e.condition,
   }));
 
-  const results = await runUserScan(queries, lookbackMinutes);
+  // Add 15-min buffer to lookback to account for eBay's Browse API indexing delay
+  // (new listings can take 10-15 min to appear in search results)
+  // Duplicates are handled by the unique constraint on (userId, ebayItemId)
+  const results = await runUserScan(queries, lookbackMinutes + 15);
   const newCount = await saveResultsForUser(userId, results);
 
   // Update lastScanAt
