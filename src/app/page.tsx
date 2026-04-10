@@ -208,8 +208,8 @@ export default function Home() {
               You&apos;re missing deals every single day
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              A mispriced Prizm Silver hits eBay at 2:47 AM. By 2:52 AM, it&apos;s sold.
-              A PSA 10 rookie gets listed $200 under market while you&apos;re at work. Gone in minutes.
+              A Prizm Silver rookie gets listed $150 under market at 2 AM while you&apos;re sleeping.
+              By morning, it&apos;s long gone. A mispriced PSA 10 sells while you&apos;re stuck at work.
               You can&apos;t watch eBay 24/7 — but CardWatch can.
             </p>
           </div>
