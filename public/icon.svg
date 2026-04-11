@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0B1D3A"/>
+  <!-- Card shape -->
+  <rect x="136" y="68" width="240" height="376" rx="32" fill="white" fill-opacity="0.15" stroke="white" stroke-width="16"/>
+  <!-- Eye/scan — outer -->
+  <path d="M256 192C192 192 144 256 144 256C144 256 192 320 256 320C320 320 368 256 368 256C368 256 320 192 256 192Z" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Eye — inner circle (iris) -->
+  <circle cx="256" cy="256" r="40" fill="white"/>
+  <!-- Scan lines -->
+  <line x1="160" y1="112" x2="224" y2="112" stroke="white" stroke-width="14" stroke-linecap="round"/>
+  <line x1="288" y1="400" x2="352" y2="400" stroke="white" stroke-width="14" stroke-linecap="round"/>
+</svg>
