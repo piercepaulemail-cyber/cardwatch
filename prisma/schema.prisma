@@ -107,9 +107,26 @@ model ScanResult {
   matchedPlayer    String
   matchedDesc      String
   conditionDescriptor String?
+  marketUngraded   Float?
+  marketPsa9       Float?
+  marketPsa10      Float?
+  marketLastFetched DateTime?
   scanTimestamp    DateTime @default(now())
 
   @@unique([userId, ebayItemId])
+}
+
+model MarketPriceCache {
+  id           String   @id @default(cuid())
+  searchKey    String   @unique
+  scpProductId String?
+  productName  String?
+  ungraded     Float?
+  psa9         Float?
+  psa10        Float?
+  fetchedAt    DateTime @default(now())
+
+  @@index([searchKey])
 }
 
 model SearchCache {

@@ -31,6 +31,8 @@ interface ScanResult {
   matchedPlayer: string;
   matchedDesc: string;
   conditionDescriptor: string | null;
+  marketUngraded: number | null;
+  marketPsa10: number | null;
   scanTimestamp: string;
 }
 
@@ -659,9 +661,23 @@ export default function DashboardPage() {
                     <p className="text-sm font-semibold text-navy leading-snug line-clamp-2">
                       {r.title}
                     </p>
-                    <p className="text-lg font-extrabold text-navy mt-1">
-                      ${r.currentPrice.toFixed(2)}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-lg font-extrabold text-navy">
+                        ${r.currentPrice.toFixed(2)}
+                      </p>
+                      {r.marketUngraded && r.currentPrice > 0 && (() => {
+                        const pct = Math.round((r.currentPrice / r.marketUngraded) * 100);
+                        return (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            pct <= 75 ? "bg-green/10 text-green" :
+                            pct <= 100 ? "bg-gold/10 text-gold" :
+                            "bg-red-100 text-red-600"
+                          }`}>
+                            {pct}%
+                          </span>
+                        );
+                      })()}
+                    </div>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span
                         className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${

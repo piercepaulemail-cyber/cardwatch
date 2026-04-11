@@ -21,6 +21,9 @@ interface CardDetail {
   matchedPlayer: string;
   matchedDesc: string;
   conditionDescriptor: string | null;
+  marketUngraded: number | null;
+  marketPsa9: number | null;
+  marketPsa10: number | null;
   scanTimestamp: string;
   images: string[];
 }
@@ -213,6 +216,62 @@ export default function CardDetailPage({
             </span>
           </div>
         </div>
+
+        {/* Market Values */}
+        {(card.marketUngraded || card.marketPsa10) && (
+          <div className="bg-navy/[0.03] rounded-xl p-4 mb-5 border border-border">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-3 font-semibold">
+              Market Averages
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              {card.marketUngraded && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Raw</p>
+                  <p className="text-lg font-extrabold text-navy">
+                    ${card.marketUngraded.toFixed(2)}
+                  </p>
+                </div>
+              )}
+              {card.marketPsa9 && (
+                <div>
+                  <p className="text-xs text-muted-foreground">PSA 9</p>
+                  <p className="text-lg font-extrabold text-navy">
+                    ${card.marketPsa9.toFixed(2)}
+                  </p>
+                </div>
+              )}
+              {card.marketPsa10 && (
+                <div>
+                  <p className="text-xs text-muted-foreground">PSA 10</p>
+                  <p className="text-lg font-extrabold text-navy">
+                    ${card.marketPsa10.toFixed(2)}
+                  </p>
+                </div>
+              )}
+            </div>
+            {card.marketUngraded && card.currentPrice > 0 && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <p className="text-xs text-muted-foreground">
+                  Listed at{" "}
+                  <span
+                    className={`font-bold ${
+                      card.currentPrice / card.marketUngraded <= 0.75
+                        ? "text-green"
+                        : card.currentPrice / card.marketUngraded <= 1
+                          ? "text-gold"
+                          : "text-red-500"
+                    }`}
+                  >
+                    {Math.round((card.currentPrice / card.marketUngraded) * 100)}% of market avg
+                  </span>
+                </p>
+              </div>
+            )}
+            <p className="text-[9px] text-muted-foreground/50 mt-2">
+              Data via SportsCardsPro
+            </p>
+          </div>
+        )}
 
         {/* Seller + Bids + Listed */}
         <div className="grid grid-cols-3 gap-4 mb-5">

@@ -9,6 +9,7 @@ import {
 } from "./ebay";
 import { sendCardAlertEmail } from "./email";
 import { sendPushNotifications } from "./push";
+import { getMarketPrices } from "./sportscardspro";
 
 /**
  * Scan for a single user (used by manual "Scan Now" button).
@@ -82,9 +83,21 @@ async function saveResultsForUser(
   }
 
   if (newCount > 0) {
+    // Enrich results with cached market prices (no extra API calls if already cached)
+    const enrichedResults = await Promise.all(
+      newResults.map(async (r) => {
+        const market = await getMarketPrices(r.matchedPlayer, r.matchedDesc).catch(() => null);
+        return {
+          ...r,
+          marketUngraded: market?.ungraded ?? null,
+          marketPsa10: market?.psa10 ?? null,
+        };
+      })
+    );
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (user?.email) {
-      await sendCardAlertEmail(user.email, newResults).catch((e) =>
+      await sendCardAlertEmail(user.email, enrichedResults).catch((e) =>
         console.error("Email notification failed:", e)
       );
     }
