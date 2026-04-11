@@ -1,8 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Explicitly mark as request-time (belt-and-suspenders for Turbopack)
+  await connection();
+
   const apiKey = process.env.SCP_API_KEY || process.env.scp_api_key;
 
   // Debug: list ALL env var names that contain "SCP" or "scp"
