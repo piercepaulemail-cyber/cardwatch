@@ -644,7 +644,7 @@ export default function DashboardPage() {
                     <p className="text-lg font-extrabold text-navy mt-1">
                       ${r.currentPrice.toFixed(2)}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span
                         className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                           r.listingType === "Auction"
@@ -654,6 +654,17 @@ export default function DashboardPage() {
                       >
                         {r.listingType === "Auction" ? "Auction" : "Buy Now"}
                       </span>
+                      {r.conditionDescriptor && (
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            r.conditionDescriptor === "Near mint or better"
+                              ? "bg-green/10 text-green"
+                              : "bg-amber-800/10 text-amber-800"
+                          }`}
+                        >
+                          {r.conditionDescriptor}
+                        </span>
+                      )}
                       {r.bidCount > 0 && (
                         <span className="text-[10px] text-muted-foreground font-medium">
                           {r.bidCount} bid{r.bidCount !== 1 ? "s" : ""}
