@@ -3,12 +3,20 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const apiKey = process.env.SCP_API_KEY;
+  const apiKey = process.env.SCP_API_KEY || process.env.scp_api_key;
+
+  // Debug: list ALL env var names that contain "SCP" or "scp"
+  const allEnvKeys = Object.keys(process.env).filter(k =>
+    k.toLowerCase().includes("scp") || k.toLowerCase().includes("api_key")
+  );
+
   const results: Record<string, unknown> = {
     step1_env_check: {
       SCP_API_KEY_exists: !!apiKey,
       SCP_API_KEY_length: apiKey?.length || 0,
       SCP_API_KEY_first5: apiKey?.substring(0, 5) || "MISSING",
+      matching_env_vars: allEnvKeys,
+      total_env_count: Object.keys(process.env).length,
     },
     step2_api_call: null,
     step3_parsed: null,
