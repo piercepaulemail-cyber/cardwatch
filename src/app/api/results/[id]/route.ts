@@ -5,6 +5,8 @@ import { requireSubscription } from "@/lib/require-subscription";
 import { fetchItemDetails } from "@/lib/ebay";
 import { getMarketPrices } from "@/lib/sportscardspro";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -80,7 +82,7 @@ export async function GET(
     }
   }
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     ...result,
     conditionDescriptor: condition,
     images,
@@ -88,4 +90,8 @@ export async function GET(
     marketPsa9,
     marketPsa10,
   });
+
+  // Prevent caching so market data always fetches fresh
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  return response;
 }
