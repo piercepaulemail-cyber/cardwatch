@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       },
     ],
     subscription_data: {
-      trial_period_days: 3,
+      trial_period_days: 7,
       metadata: {
         userId: session.user.id,
         tier,

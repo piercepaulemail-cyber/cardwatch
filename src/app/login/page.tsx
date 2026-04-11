@@ -273,7 +273,7 @@ function LoginForm() {
           <p className="text-sm text-muted-foreground text-center mb-6">
             {isLogin
               ? "Sign in to your CardWatch account"
-              : "Start your 3-day free trial"}
+              : "Start your 7-day free trial"}
           </p>
 
           {/* Google */}

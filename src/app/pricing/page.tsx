@@ -104,8 +104,10 @@ export default function PricingPage() {
           <Logo size={22} />
           CardWatch
         </Link>
-        <div className="flex gap-3">
-          {!session && (
+        <div className="flex items-center gap-3">
+          {session ? (
+            <span className="text-sm text-white/60">{session.user?.email}</span>
+          ) : (
             <button
               onClick={() => router.push("/login")}
               className="text-white/80 hover:text-white text-sm font-medium transition"
@@ -124,7 +126,7 @@ export default function PricingPage() {
           </h1>
           <p className="text-white/60 text-lg mb-8">
             All plans include a{" "}
-            <span className="text-white font-semibold">3-day free trial</span>.
+            <span className="text-white font-semibold">7-day free trial</span>.
             Cancel anytime.
           </p>
 

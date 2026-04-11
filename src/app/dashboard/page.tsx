@@ -54,6 +54,8 @@ export default function DashboardPage() {
   const [minPrice, setMinPrice] = useState("");
   const [listingType, setListingType] = useState("all");
   const [condition, setCondition] = useState("ungraded");
+  const [addedMsg, setAddedMsg] = useState("");
+  const [watchlistOpen, setWatchlistOpen] = useState(false);
 
   const loadResults = useCallback(async () => {
     const res = await fetch(
@@ -91,7 +93,7 @@ export default function DashboardPage() {
       .then((res) => res.json())
       .then((data) => {
         if (!data.active) {
-          router.push("/pricing");
+          router.replace("/pricing");
         } else {
           setSubChecked(true);
           setUserTier(data.tier);
@@ -129,6 +131,8 @@ export default function DashboardPage() {
     setListingType("all");
     setCondition("ungraded");
     loadWatchlist();
+    setAddedMsg(`${playerName} added to watchlist!`);
+    setTimeout(() => setAddedMsg(""), 3000);
   }
 
   async function deleteEntry(id: string) {
@@ -383,23 +387,37 @@ export default function DashboardPage() {
               >
                 + Add
               </button>
+              {addedMsg && (
+                <p className="text-xs text-green font-semibold mt-2 text-center">{addedMsg}</p>
+              )}
             </form>
           </div>
 
-          {/* Entries */}
+          {/* Entries — collapsible */}
           <div className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-navy uppercase tracking-wide">
-                Watchlist
-              </h2>
+            <button
+              onClick={() => setWatchlistOpen(!watchlistOpen)}
+              className="flex items-center justify-between w-full mb-3"
+            >
+              <div className="flex items-center gap-2">
+                <svg
+                  className={`w-4 h-4 text-navy transition-transform ${watchlistOpen ? "rotate-90" : ""}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                <h2 className="text-sm font-bold text-navy uppercase tracking-wide">
+                  Watchlist
+                </h2>
+              </div>
               <span className="bg-green text-white text-xs font-bold px-2 py-0.5 rounded-full">
                 {watchlist.length}{userTier === "scout" ? "/25" : userTier === "pro" ? "/100" : ""}
               </span>
-            </div>
-            {watchlist.length === 0 && (
+            </button>
+            {watchlistOpen && watchlist.length === 0 && (
               <p className="text-sm text-muted-foreground">No entries yet</p>
             )}
-            <div className="space-y-2">
+            {watchlistOpen && <div className="space-y-2">
               {watchlist.map((entry) => (
                 <div
                   key={entry.id}
@@ -443,7 +461,7 @@ export default function DashboardPage() {
                   </button>
                 </div>
               ))}
-            </div>
+            </div>}
           </div>
         </aside>
 
@@ -453,7 +471,7 @@ export default function DashboardPage() {
           {userTier && (
             <div className="bg-white rounded-xl border border-border p-4 mb-5 shadow-sm">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Scan Frequency
+                How often do you want eBay scanned?
               </p>
               <div className="flex flex-wrap gap-2">
                 {[
@@ -562,17 +580,17 @@ export default function DashboardPage() {
           <div className="bg-white rounded-xl border border-border overflow-hidden shadow-sm">
             {/* Sort bar + select all */}
             <div className="bg-navy px-4 py-3 flex items-center gap-4 flex-wrap">
-              <label className="flex items-center gap-2 text-white text-xs">
+              <label className="flex items-center gap-2 text-white text-sm font-semibold">
                 <input
                   type="checkbox"
                   checked={results.length > 0 && selectedIds.size === results.length}
                   onChange={toggleSelectAll}
-                  className="w-4 h-4 accent-white rounded"
+                  className="w-5 h-5 accent-green rounded"
                 />
                 Select all
               </label>
               <span className="text-white/40 text-xs">|</span>
-              <span className="text-white/60 text-xs">Sort by:</span>
+              <span className="text-green text-xs font-semibold">Sort by:</span>
               {[
                 { key: "currentPrice", label: "Price" },
                 { key: "listingType", label: "Type" },
@@ -585,8 +603,8 @@ export default function DashboardPage() {
                   onClick={() => handleSort(col.key)}
                   className={`text-xs font-semibold px-2.5 py-1 rounded transition ${
                     sortBy === col.key
-                      ? "bg-white/20 text-white"
-                      : "text-white/60 hover:text-white"
+                      ? "bg-green/20 text-green"
+                      : "text-green/60 hover:text-green"
                   }`}
                 >
                   {col.label}

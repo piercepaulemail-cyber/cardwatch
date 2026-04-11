@@ -16,7 +16,8 @@ export async function proxy(req: NextRequest) {
   if (pathname === "/login") {
     const session = await auth();
     if (session) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      // Let the dashboard handle the subscription check
+      return NextResponse.redirect(new URL("/dashboard", req.url), { status: 302 });
     }
   }
 

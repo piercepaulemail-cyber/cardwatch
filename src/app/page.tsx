@@ -70,7 +70,7 @@ export default function Home() {
                   Sign in
                 </Link>
               </div>
-              <p className="text-muted-foreground text-sm mt-4">3-day free trial. Cancel anytime. Plans start at $4.99/mo.</p>
+              <p className="text-muted-foreground text-sm mt-4">7-day free trial. Cancel anytime. Plans start at $4.99/mo.</p>
             </div>
 
             {/* Right: Product mockup */}
@@ -450,7 +450,7 @@ export default function Home() {
           </h2>
           <p className="text-white/60 text-lg mb-8 max-w-xl mx-auto">
             Join collectors who stay ahead of the market.
-            Start your 3-day free trial today — no credit card charged until it ends.
+            Start your 7-day free trial today — no credit card charged until it ends.
           </p>
           <Link
             href="/pricing"

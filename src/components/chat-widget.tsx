@@ -16,7 +16,7 @@ const FAQ: { keywords: string[]; response: string }[] = [
   {
     keywords: ["price", "cost", "how much", "pricing", "plan", "plans", "subscription", "subscribe", "pay"],
     response:
-      "We have 3 plans:\n\n• Scout — $4.99/mo: 25 watchlist entries, scan every 2h, 6h, 12h, or daily\n• Pro — $14.99/mo: 100 watchlist entries, scan every 30m, 45m, 1h, plus Scout options\n• Elite — $29.99/mo: Unlimited watchlist entries, scan as fast as every 15 minutes\n\nAll plans include email alerts, price check, and a 3-day free trial!",
+      "We have 3 plans:\n\n• Scout — $4.99/mo: 25 watchlist entries, scan every 2h, 6h, 12h, or daily\n• Pro — $14.99/mo: 100 watchlist entries, scan every 30m, 45m, 1h, plus Scout options\n• Elite — $29.99/mo: Unlimited watchlist entries, scan as fast as every 15 minutes\n\nAll plans include email alerts, price check, and a 7-day free trial!",
   },
   {
     keywords: ["scout"],
@@ -36,7 +36,7 @@ const FAQ: { keywords: string[]; response: string }[] = [
   {
     keywords: ["trial", "free"],
     response:
-      "Yes! All plans come with a 3-day free trial. You won't be charged until the trial ends, and you can cancel anytime. Pick any plan to get started!",
+      "Yes! All plans come with a 7-day free trial. You won't be charged until the trial ends, and you can cancel anytime. Pick any plan to get started!",
   },
   {
     keywords: ["scan", "how often", "frequency", "fast", "speed", "interval"],
@@ -71,7 +71,7 @@ const FAQ: { keywords: string[]; response: string }[] = [
   {
     keywords: ["account", "login", "sign", "register", "signup"],
     response:
-      "Sign in with Google or create an account with email and password at mycardwatch.com/login. After signing up, pick a plan to start your 3-day free trial!",
+      "Sign in with Google or create an account with email and password at mycardwatch.com/login. After signing up, pick a plan to start your 7-day free trial!",
   },
   {
     keywords: ["contact", "support", "help", "email us", "reach", "question"],
