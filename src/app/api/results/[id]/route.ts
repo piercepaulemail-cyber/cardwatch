@@ -57,8 +57,12 @@ export async function GET(
     !result.marketLastFetched ||
     Date.now() - result.marketLastFetched.getTime() > 7 * 24 * 60 * 60 * 1000;
 
+  console.log(`[Detail] Market data needed: ${needsMarketData}, player: ${result.matchedPlayer}, desc: ${result.matchedDesc}`);
+  console.log(`[Detail] SCP_API_KEY set: ${!!process.env.SCP_API_KEY}`);
+
   if (needsMarketData) {
     const market = await getMarketPrices(result.matchedPlayer, result.matchedDesc);
+    console.log(`[Detail] Market result:`, JSON.stringify(market));
     if (market) {
       marketUngraded = market.ungraded;
       marketPsa9 = market.psa9;
