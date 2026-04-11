@@ -16,6 +16,40 @@ function normalizeSearchKey(player: string, desc: string): string {
 }
 
 /**
+ * Score a SCP product name against our query tokens.
+ * Returns the number of query tokens found in the product name.
+ * Tokens shorter than 2 chars (like "a", "#") are skipped.
+ */
+function scoreProductMatch(queryTokens: string[], productName: string): number {
+  const nameLower = productName.toLowerCase();
+  let score = 0;
+  for (const token of queryTokens) {
+    if (token.length >= 2 && nameLower.includes(token)) score++;
+  }
+  return score;
+}
+
+/**
+ * Pick the best-matching product from SCP results by scoring each product name
+ * against the query tokens. This prevents broad set matches (e.g. "Downtown")
+ * from outranking player-specific cards.
+ */
+function pickBestProduct(products: Record<string, unknown>[], query: string): Record<string, unknown> | null {
+  if (!products.length) return null;
+  const queryTokens = query.toLowerCase().split(/\s+/);
+  let best = products[0];
+  let bestScore = scoreProductMatch(queryTokens, String(products[0]["product-name"] || ""));
+  for (let i = 1; i < products.length; i++) {
+    const score = scoreProductMatch(queryTokens, String(products[i]["product-name"] || ""));
+    if (score > bestScore) {
+      bestScore = score;
+      best = products[i];
+    }
+  }
+  return best;
+}
+
+/**
  * Search SportsCardsPro for market prices.
  * Checks cache first (7-day TTL), only calls API on cache miss.
  * Gracefully returns null if SCP_API_KEY is not configured.
@@ -79,8 +113,9 @@ export async function getMarketPrices(
       return null;
     }
 
-    // Take the first (best match) product
-    const product = products[0];
+    // Pick the product whose name best matches all query tokens (player + set + number).
+    // Avoids returning a generic set insert when a player-specific card is available.
+    const product = pickBestProduct(products, query)!;
 
     // SCP returns prices in pennies (integer)
     const pennies = (val: unknown): number | null => {
@@ -119,7 +154,7 @@ export async function getMarketPrices(
       },
     }).catch((e) => console.error("[SCP] Cache write error:", e));
 
-    console.log(`[SCP] Fetched prices for "${query}": raw=$${prices.ungraded}, PSA10=$${prices.psa10}`);
+    console.log(`[SCP] Fetched prices for "${query}" → matched "${prices.productName}": raw=$${prices.ungraded}, PSA10=$${prices.psa10}`);
     return prices;
   } catch (e) {
     console.error("[SCP] API error:", e);
