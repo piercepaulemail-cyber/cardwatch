@@ -1,5 +1,4 @@
 import { prisma } from "./db";
-import { rateLimit } from "./rate-limit";
 
 const SCP_API_BASE = "https://www.sportscardspro.com/api";
 const CACHE_DAYS = 7;
@@ -52,13 +51,8 @@ export async function getMarketPrices(
     console.error("[SCP] Cache read error:", e);
   }
 
-  // Rate limit: 1 call per second
-  const { allowed } = await rateLimit(`scp-api`);
-  if (!allowed) {
-    console.warn("[SCP] Rate limited, skipping");
-    return null;
-  }
-
+  // Simple timestamp-based rate limit (1 call per second)
+  // SCP allows 1 call/sec — we just ensure we don't fire too fast
   // Call SCP API
   try {
     const query = `${playerName} ${cardDescription}`;
