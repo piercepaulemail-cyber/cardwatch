@@ -19,6 +19,7 @@ model User {
   subscription        Subscription?
   watchlist           WatchlistEntry[]
   scanResults         ScanResult[]
+  pushSubscriptions   PushSubscription[]
   accounts            Account[]
   createdAt           DateTime       @default(now())
 }
@@ -119,4 +120,16 @@ model SearchCache {
   expiresAt   DateTime
 
   @@index([cacheKey, expiresAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  auth      String
+  p256dh    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

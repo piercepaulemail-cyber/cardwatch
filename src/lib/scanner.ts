@@ -8,6 +8,7 @@ import {
   type EbayResult,
 } from "./ebay";
 import { sendCardAlertEmail } from "./email";
+import { sendPushNotifications } from "./push";
 
 /**
  * Scan for a single user (used by manual "Scan Now" button).
@@ -87,6 +88,11 @@ async function saveResultsForUser(
         console.error("Email notification failed:", e)
       );
     }
+
+    // Send push notifications
+    await sendPushNotifications(userId, newResults).catch((e) =>
+      console.error("Push notification failed:", e)
+    );
   }
 
   return newCount;
