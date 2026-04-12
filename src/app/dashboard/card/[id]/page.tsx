@@ -25,7 +25,6 @@ interface CardDetail {
   rawMax: number | null;
   psa10Min: number | null;
   psa10Max: number | null;
-  compCount: number;
   scanTimestamp: string;
   images: string[];
 }
@@ -237,37 +236,32 @@ export default function CardDetailPage({
         {/* Market Values */}
         <div className="bg-navy/[0.03] rounded-xl p-4 mb-5 border border-border">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-3 font-semibold">
-            Market Ranges
+            Market Value
           </p>
           {(card.rawMin || card.psa10Min) ? (
             <>
               <div className="grid grid-cols-2 gap-4">
-                {card.rawMin && (
+                {card.rawMin != null && (
                   <div>
                     <p className="text-xs text-muted-foreground">Raw</p>
                     <p className="text-lg font-extrabold text-navy">
-                      {card.rawMin === card.rawMax
-                        ? `$${card.rawMin.toFixed(0)}`
-                        : `$${card.rawMin.toFixed(0)} – $${card.rawMax!.toFixed(0)}`}
+                      ${card.rawMin.toFixed(2)}
                     </p>
                   </div>
                 )}
-                {card.psa10Min && (
+                {card.psa10Min != null && (
                   <div>
                     <p className="text-xs text-muted-foreground">PSA 10</p>
                     <p className="text-lg font-extrabold text-navy">
-                      {card.psa10Min === card.psa10Max
-                        ? `$${card.psa10Min.toFixed(0)}`
-                        : `$${card.psa10Min.toFixed(0)} – $${card.psa10Max!.toFixed(0)}`}
+                      ${card.psa10Min.toFixed(2)}
                     </p>
                   </div>
                 )}
               </div>
-              {card.rawMin && card.rawMax && card.currentPrice > 0 && (
+              {card.rawMin != null && card.currentPrice > 0 && (
                 <div className="mt-3 pt-3 border-t border-border">
                   {(() => {
-                    const mid = (card.rawMin + card.rawMax) / 2;
-                    const pct = Math.round((card.currentPrice / mid) * 100);
+                    const pct = Math.round((card.currentPrice / card.rawMin) * 100);
                     return (
                       <p className="text-xs text-muted-foreground">
                         Listed at{" "}
@@ -276,7 +270,7 @@ export default function CardDetailPage({
                             pct <= 75 ? "text-green" : pct <= 100 ? "text-gold" : "text-red-500"
                           }`}
                         >
-                          {pct}% of market midpoint
+                          {pct}% of market value
                         </span>
                       </p>
                     );
@@ -287,12 +281,7 @@ export default function CardDetailPage({
           ) : (
             <p className="text-xs text-muted-foreground">No market data available</p>
           )}
-          {card.compCount > 0 && (
-            <p className="text-[10px] text-muted-foreground/60 mt-2">
-              Based on {card.compCount} comp{card.compCount !== 1 ? "s" : ""}
-            </p>
-          )}
-          <p className="text-[9px] text-muted-foreground/50 mt-1">
+          <p className="text-[9px] text-muted-foreground/50 mt-2">
             Data via SportsCardsPro
           </p>
         </div>

@@ -3,12 +3,7 @@ import { sendEmail } from "./mailer";
 
 interface EmailResult extends EbayResult {
   marketUngraded?: number | null;
-  marketUngradedMin?: number | null;
-  marketUngradedMax?: number | null;
   marketPsa10?: number | null;
-  marketPsa10Min?: number | null;
-  marketPsa10Max?: number | null;
-  marketCompCount?: number;
 }
 
 function esc(str: string): string {
@@ -77,15 +72,14 @@ function buildEmailHtml(results: EmailResult[]): string {
           </tr>
         </table>
         <div style="margin-top:12px;padding:10px;background:#F5F6F8;border-radius:8px;">
-          <span style="color:#6B7A8D;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">Market Ranges</span>
-          ${(r.marketUngradedMin || r.marketPsa10Min) ? `
+          <span style="color:#6B7A8D;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">Market Value</span>
+          ${(r.marketUngraded || r.marketPsa10) ? `
           <table style="width:100%;margin-top:6px;" cellpadding="0" cellspacing="0">
             <tr>
-              ${r.marketUngradedMin != null ? `<td style="padding:2px 8px 2px 0;"><span style="color:#6B7A8D;font-size:11px;">Raw:</span> <span style="color:#0B1D3A;font-weight:700;font-size:14px;">${r.marketUngradedMin === r.marketUngradedMax ? `$${r.marketUngradedMin.toFixed(0)}` : `$${r.marketUngradedMin.toFixed(0)} – $${r.marketUngradedMax!.toFixed(0)}`}</span></td>` : ""}
-              ${r.marketPsa10Min != null ? `<td style="padding:2px 0;"><span style="color:#6B7A8D;font-size:11px;">PSA 10:</span> <span style="color:#0B1D3A;font-weight:700;font-size:14px;">${r.marketPsa10Min === r.marketPsa10Max ? `$${r.marketPsa10Min.toFixed(0)}` : `$${r.marketPsa10Min.toFixed(0)} – $${r.marketPsa10Max!.toFixed(0)}`}</span></td>` : ""}
+              ${r.marketUngraded ? `<td style="padding:2px 8px 2px 0;"><span style="color:#6B7A8D;font-size:11px;">Raw:</span> <span style="color:#0B1D3A;font-weight:700;font-size:14px;">$${r.marketUngraded.toFixed(2)}</span></td>` : ""}
+              ${r.marketPsa10 ? `<td style="padding:2px 0;"><span style="color:#6B7A8D;font-size:11px;">PSA 10:</span> <span style="color:#0B1D3A;font-weight:700;font-size:14px;">$${r.marketPsa10.toFixed(2)}</span></td>` : ""}
             </tr>
           </table>
-          ${r.marketCompCount ? `<span style="color:#9CA3AF;font-size:10px;margin-top:4px;display:block;">Based on ${r.marketCompCount} comp${r.marketCompCount !== 1 ? "s" : ""}</span>` : ""}
           ` : `<p style="color:#9CA3AF;font-size:11px;margin:6px 0 0 0;">No market data available</p>`}
         </div>
         <div style="margin-top:12px;">
