@@ -55,6 +55,7 @@ export async function GET(
   let marketUngraded = result.marketUngraded;
   let marketPsa9 = result.marketPsa9;
   let marketPsa10 = result.marketPsa10;
+  let marketSource: string = "scp";
 
   const needsMarketData =
     !result.marketLastFetched ||
@@ -70,6 +71,7 @@ export async function GET(
       marketUngraded = market.ungraded;
       marketPsa9 = market.psa9;
       marketPsa10 = market.psa10;
+      marketSource = market.source;
 
       await prisma.scanResult.update({
         where: { id },
@@ -81,6 +83,13 @@ export async function GET(
         },
       }).catch(() => {});
     }
+  } else {
+    // Pull source from cache without re-fetching
+    const cached = await prisma.marketPriceCache.findUnique({
+      where: { query: `${result.matchedPlayer} ${result.matchedDesc}`.toLowerCase().trim().replace(/\s+/g, " ") },
+      select: { source: true },
+    }).catch(() => null);
+    if (cached?.source) marketSource = cached.source;
   }
 
   const response = NextResponse.json({
@@ -90,6 +99,7 @@ export async function GET(
     marketUngraded,
     marketPsa9,
     marketPsa10,
+    marketSource,
   });
 
   // Prevent caching so market data always fetches fresh

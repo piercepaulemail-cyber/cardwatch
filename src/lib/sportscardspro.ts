@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { getEbaySoldPrices } from "./ebay";
 
 const SCP_API_BASE = "https://www.sportscardspro.com/api";
 
@@ -8,6 +9,8 @@ export interface MarketPrices {
   ungraded: number | null;
   psa9: number | null;
   psa10: number | null;
+  /** Which data source(s) produced the ungraded price */
+  source: "scp" | "ebay" | "blended";
 }
 
 interface Comp {
@@ -100,6 +103,7 @@ export async function getMarketPrices(
         ungraded: cached.finalPrice,
         psa9: best?.psa9 ?? null,
         psa10: best?.psa10 ?? null,
+        source: (cached.source as "scp" | "ebay" | "blended") ?? "scp",
       };
     }
 
@@ -168,6 +172,35 @@ export async function getMarketPrices(
     }
 
     let finalPrice = median(ungradedPrices);
+    let source: "scp" | "ebay" | "blended" = "scp";
+
+    // ── 5b. Blend with eBay sold prices ────────────────────────────────────
+    // Only uses real sold transactions (SoldItemsOnly filter), not asking prices.
+    // Gracefully skipped if EBAY_APP_ID is not configured.
+    const ebaySoldPrices = await getEbaySoldPrices(playerName, cardDescription);
+    if (ebaySoldPrices && ebaySoldPrices.length >= 3) {
+      const ebayMedian = median(ebaySoldPrices);
+      const pctDiff =
+        Math.abs(finalPrice - ebayMedian) / Math.max(finalPrice, ebayMedian);
+
+      if (pctDiff > 0.3) {
+        // Prices diverge >30% — trust eBay's real transaction data over SCP's
+        console.log(
+          `[Pricing] eBay sold median $${ebayMedian.toFixed(2)} vs SCP $${finalPrice.toFixed(2)} ` +
+            `(${(pctDiff * 100).toFixed(0)}% diff) — using eBay`
+        );
+        finalPrice = ebayMedian;
+        source = "ebay";
+      } else {
+        // Prices agree — blend 60% eBay (real sales) + 40% SCP
+        const blended = ebayMedian * 0.6 + finalPrice * 0.4;
+        console.log(
+          `[Pricing] Blending eBay $${ebayMedian.toFixed(2)} + SCP $${finalPrice.toFixed(2)} → $${blended.toFixed(2)}`
+        );
+        finalPrice = blended;
+        source = "blended";
+      }
+    }
 
     // ── 6. Outlier protection ───────────────────────────────────────────────
     if (cached) {
@@ -198,7 +231,7 @@ export async function getMarketPrices(
         prices: pricesJson,
         finalPrice,
         confidenceScore: avgConfidence,
-        source: "scp",
+        source,
         expiresAt,
         lastValidatedAt: new Date(),
       },
@@ -206,6 +239,7 @@ export async function getMarketPrices(
         prices: pricesJson,
         finalPrice,
         confidenceScore: avgConfidence,
+        source,
         expiresAt,
         lastValidatedAt: new Date(),
       },
@@ -219,8 +253,8 @@ export async function getMarketPrices(
       );
 
     console.log(
-      `[SCP] "${rawQuery}" → ${validComps.length}/${comps.length} valid comps, ` +
-        `median=$${finalPrice.toFixed(2)}, confidence=${avgConfidence.toFixed(2)}, ` +
+      `[Pricing] "${rawQuery}" → ${validComps.length}/${comps.length} valid comps, ` +
+        `final=$${finalPrice.toFixed(2)}, source=${source}, confidence=${avgConfidence.toFixed(2)}, ` +
         `TTL=${Math.round(getTtlMs(avgConfidence) / 60000)}m`
     );
 
@@ -230,6 +264,7 @@ export async function getMarketPrices(
       ungraded: finalPrice,
       psa9: bestComp.psa9,
       psa10: bestComp.psa10,
+      source,
     };
   } catch (e) {
     console.error("[SCP] Error:", e);

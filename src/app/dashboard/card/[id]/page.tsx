@@ -24,6 +24,7 @@ interface CardDetail {
   marketUngraded: number | null;
   marketPsa9: number | null;
   marketPsa10: number | null;
+  marketSource: string | null;
   scanTimestamp: string;
   images: string[];
 }
@@ -283,7 +284,11 @@ export default function CardDetailPage({
               </div>
             )}
             <p className="text-[9px] text-muted-foreground/50 mt-2">
-              Data via SportsCardsPro
+              {card.marketSource === "ebay"
+                ? "Data via eBay sold listings"
+                : card.marketSource === "blended"
+                  ? "Data via eBay sold + SportsCardsPro"
+                  : "Data via SportsCardsPro"}
             </p>
           </div>
         )}

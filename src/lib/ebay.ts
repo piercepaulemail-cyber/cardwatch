@@ -434,6 +434,96 @@ export async function runUserScan(
   return allResults;
 }
 
+const FINDING_API_ENDPOINT =
+  "https://svcs.ebay.com/services/search/FindingService/v1";
+
+/**
+ * Fetch eBay recently sold prices for a card using the Finding API.
+ *
+ * Uses the same EBAY_APP_ID as the Browse API — no extra credentials needed.
+ * Filters for SoldItemsOnly so we only get prices buyers actually paid,
+ * not asking prices from active or unsold listings.
+ *
+ * Returns an array of sold prices (USD) from the last 30 days, or null if
+ * eBay credentials are missing or the request fails.
+ */
+export async function getEbaySoldPrices(
+  playerName: string,
+  cardDescription: string
+): Promise<number[] | null> {
+  const appId = process.env.EBAY_APP_ID;
+  if (!appId) return null;
+
+  try {
+    const keywords = `${playerName} ${cardDescription}`;
+    const thirtyDaysAgo = new Date(
+      Date.now() - 30 * 24 * 60 * 60 * 1000
+    ).toISOString();
+
+    const params = new URLSearchParams({
+      "OPERATION-NAME": "findCompletedItems",
+      "SERVICE-VERSION": "1.0.0",
+      "SECURITY-APPNAME": appId,
+      "RESPONSE-DATA-FORMAT": "JSON",
+      "REST-PAYLOAD": "",
+      keywords,
+      categoryId: SPORTS_CARDS_CATEGORY,
+      // Only items that actually sold — excludes unsold completed listings
+      "itemFilter(0).name": "SoldItemsOnly",
+      "itemFilter(0).value": "true",
+      // Only last 30 days
+      "itemFilter(1).name": "EndTimeFrom",
+      "itemFilter(1).value": thirtyDaysAgo,
+      "paginationInput.entriesPerPage": "50",
+      sortOrder: "EndTimeSoonest",
+    });
+
+    const resp = await fetch(`${FINDING_API_ENDPOINT}?${params}`, {
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!resp.ok) {
+      console.error(`[eBay Finding] API error: ${resp.status}`);
+      return null;
+    }
+
+    const data = await resp.json();
+    const findResp = data.findCompletedItemsResponse?.[0];
+    const ack = findResp?.ack?.[0];
+    if (ack !== "Success" && ack !== "Warning") {
+      console.error(`[eBay Finding] Unexpected ack: ${ack}`);
+      return null;
+    }
+
+    const items: Record<string, unknown>[] =
+      findResp?.searchResult?.[0]?.item ?? [];
+    const prices: number[] = [];
+
+    for (const item of items) {
+      // Extra safety check — SoldItemsOnly should guarantee this, but verify
+      const state = (
+        item.sellingStatus as Record<string, unknown>[]
+      )?.[0]?.sellingState as string[] | undefined;
+      if (state?.[0] !== "EndedWithSales") continue;
+
+      const priceEntry = (
+        item.sellingStatus as Record<string, unknown>[]
+      )?.[0]?.currentPrice as Record<string, unknown>[] | undefined;
+      const priceStr = priceEntry?.[0]?.["__value__"] as string | undefined;
+      const price = parseFloat(priceStr ?? "0");
+      if (price > 0) prices.push(price);
+    }
+
+    console.log(
+      `[eBay Finding] "${keywords}" → ${prices.length} sold prices in last 30d`
+    );
+    return prices.length > 0 ? prices : null;
+  } catch (e) {
+    console.error("[eBay Finding] Error:", e);
+    return null;
+  }
+}
+
 /**
  * Purge expired cache entries. Call periodically.
  */
