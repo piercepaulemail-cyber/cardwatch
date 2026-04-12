@@ -21,6 +21,7 @@ interface Comp {
   ungraded: number | null;
   psa9: number | null;
   psa10: number | null;
+  _hasPlayer?: boolean;
 }
 
 function normalizeQuery(player: string, desc: string): string {
@@ -106,18 +107,29 @@ export async function getMarketPrices(
       return null;
     }
 
-    // ── 3. Use the first SCP result that has a price ─────────────────────
-    // SCP already ranks results by relevance — no need to re-score them.
-    const comps: Comp[] = products.map((p) => ({
-      productId: String(p.id ?? ""),
-      productName: String(p["product-name"] ?? ""),
-      confidence: 1,
-      ungraded: pennies(p["loose-price"]),
-      psa9: pennies(p["graded-price"]),
-      psa10: pennies(p["manual-only-price"]),
-    }));
+    // ── 3. Find the first SCP result for this player that has a price ────
+    // SCP ranks by relevance, but for generic terms like "Downtown" it may
+    // return a different player's card first. So we check that the player's
+    // last name appears in the product name or set name.
+    const lastName = playerName.toLowerCase().split(/\s+/).filter((t) => t.length >= 2).at(-1) ?? "";
 
-    const bestMatch = comps.find((c) => c.ungraded !== null);
+    const comps: Comp[] = products.map((p) => {
+      const combined = `${String(p["product-name"] ?? "")} ${String(p["console-name"] ?? "")}`.toLowerCase();
+      return {
+        productId: String(p.id ?? ""),
+        productName: String(p["product-name"] ?? ""),
+        confidence: 1,
+        ungraded: pennies(p["loose-price"]),
+        psa9: pennies(p["graded-price"]),
+        psa10: pennies(p["manual-only-price"]),
+        _hasPlayer: lastName ? combined.includes(lastName) : true,
+      };
+    });
+
+    // First try: player name match + has price. Fallback: any result with price.
+    const bestMatch =
+      comps.find((c) => c._hasPlayer && c.ungraded !== null) ??
+      comps.find((c) => c.ungraded !== null);
 
     if (!bestMatch) {
       console.log(`[SCP] No priced result for "${rawQuery}" — ${comps.length} results, none had a price`);
