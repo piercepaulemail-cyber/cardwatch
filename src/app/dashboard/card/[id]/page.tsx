@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -62,6 +62,7 @@ export default function CardDetailPage({
   const [card, setCard] = useState<CardDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [imgIndex, setImgIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -127,11 +128,25 @@ export default function CardDetailPage({
         {card.images && card.images.length > 0 && (
           <div className="mb-6">
             {/* Main image */}
-            <div className="relative rounded-xl overflow-hidden border border-border bg-secondary">
+            <div
+              className="relative rounded-xl overflow-hidden border border-border bg-secondary"
+              onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                if (touchStartX.current === null || card.images.length <= 1) return;
+                const delta = e.changedTouches[0].clientX - touchStartX.current;
+                touchStartX.current = null;
+                if (Math.abs(delta) < 50) return;
+                if (delta < 0) {
+                  setImgIndex((prev) => (prev === card.images.length - 1 ? 0 : prev + 1));
+                } else {
+                  setImgIndex((prev) => (prev === 0 ? card.images.length - 1 : prev - 1));
+                }
+              }}
+            >
               <img
                 src={card.images[imgIndex]}
                 alt=""
-                className="w-full max-h-[500px] object-contain"
+                className="w-full max-h-[500px] object-contain transition-opacity duration-200"
               />
               {/* Navigation arrows */}
               {card.images.length > 1 && (
