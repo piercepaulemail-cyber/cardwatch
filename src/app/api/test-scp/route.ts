@@ -82,8 +82,8 @@ export async function GET() {
   // Test two cases: common player (all tokens expected to match) and
   // player where SCP likely abbreviates first name ("T. McMillan")
   const testCases = [
-    { playerName: "Caleb Williams", cardDescription: "2024 panini prizm" },
-    { playerName: "Tetairoa McMillan", cardDescription: "2024 panini prizm" },
+    { playerName: "Jaxson Dart", cardDescription: "Silver Prizm" },
+    { playerName: "Jaxson Dart", cardDescription: "2025 panini prizm silver" },
   ];
 
   const scoringResults: Record<string, unknown>[] = [];
@@ -130,14 +130,45 @@ export async function GET() {
         return {
           name,
           set: p["console-name"],
+          id: p.id,
           score: Number(debug.score.toFixed(2)),
           playerHit: debug.playerHit,
           lastNameHit: debug.lastNameHit,
           matched: debug.matched,
           misses: debug.misses,
+          rawLoosePrice: p["loose-price"],
           loosePriceDollars: p["loose-price"] ? Number(p["loose-price"]) / 100 : null,
+          rawGradedPrice: p["graded-price"],
+          gradedPriceDollars: p["graded-price"] ? Number(p["graded-price"]) / 100 : null,
+          rawManualPrice: p["manual-only-price"],
+          psa10PriceDollars: p["manual-only-price"] ? Number(p["manual-only-price"]) / 100 : null,
         };
       });
+
+      // Also score with the ACTUAL function from sportscardspro.ts to see which product gets picked
+      const actualScored = products.map((p) => {
+        const name = String(p["product-name"] ?? "");
+        const nameLower = name.toLowerCase();
+        const hasPlayer = playerTokens.some((t) => nameLower.includes(t));
+        if (!hasPlayer) return { name, actualScore: 0 };
+        const meaningful = queryTokens.filter((t) => t.length >= 2);
+        if (!meaningful.length) return { name, actualScore: 0 };
+        const matched = meaningful.filter((t) => nameLower.includes(t)).length;
+        let score = matched / meaningful.length;
+        const lastName = playerTokens.at(-1) ?? "";
+        if (lastName && nameLower.includes(lastName)) score = Math.max(score, 0.5);
+        return {
+          name,
+          actualScore: score,
+          loosePriceDollars: p["loose-price"] ? Number(p["loose-price"]) / 100 : null,
+          psa10PriceDollars: p["manual-only-price"] ? Number(p["manual-only-price"]) / 100 : null,
+        };
+      });
+
+      // Sort by actual score to show which one our code picks
+      const actualBest = actualScored
+        .filter((c) => c.actualScore > 0.4 && c.loosePriceDollars)
+        .sort((a, b) => b.actualScore - a.actualScore);
 
       const passing = allScores.filter((s) => s > 0.4).length;
       const rejected = allScores.filter((s) => s === 0).length;
@@ -158,6 +189,8 @@ export async function GET() {
               ? `${passing} comps (confidence > 0.4)`
               : "NONE — no product contained player's last name",
         },
+        actualCodeWouldPick: actualBest[0] ?? "NONE",
+        actualTop5: actualBest.slice(0, 5),
         top20Products: top20,
       });
     } catch (e) {
