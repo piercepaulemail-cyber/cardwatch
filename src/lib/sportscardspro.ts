@@ -61,6 +61,19 @@ function scoreConfidence(
   return score;
 }
 
+/**
+ * Return the 25th–75th percentile slice of values when max > 3× min,
+ * preventing absurd ranges like $12–$13,750.
+ */
+function trimOutliers(values: number[]): number[] {
+  if (values.length < 4) return values;
+  const sorted = [...values].sort((a, b) => a - b);
+  if (sorted[sorted.length - 1] <= sorted[0] * 3) return values;
+  const lo = Math.floor(sorted.length * 0.25);
+  const hi = Math.ceil(sorted.length * 0.75);
+  return sorted.slice(lo, hi);
+}
+
 function median(values: number[]): number {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -91,7 +104,7 @@ function pennies(val: unknown): number | null {
  *   1. Check cache — return if not expired
  *   2. Fetch SCP products
  *   3. Score each product for query confidence
- *   4. Filter comps with confidence > 0.7
+ *   4. Filter comps with confidence > 0.4 (last-name match alone = 0.5, passes)
  *   5. Calculate median finalPrice
  *   6. Outlier protection: if new price differs from cached > 40%, keep old
  *   7. Set dynamic TTL (7d / 1d / 15m) based on confidence
@@ -186,15 +199,11 @@ export async function getMarketPrices(
       psa10: pennies(p["manual-only-price"]),
     }));
 
-    // High-confidence comps (all key tokens match)
-    const validComps = comps.filter((c) => c.confidence > 0.7);
-    // Player-matched comps (at least one player token matched — confidence > 0)
-    const playerMatchedComps = comps.filter((c) => c.confidence > 0);
+    // Confidence threshold: 0.4 — a last-name-only match scores 0.5 and passes.
+    const validComps = comps.filter((c) => c.confidence > 0.4);
 
-    // Prefer high-confidence → fall back to any player-name match.
-    // Only return null if nothing at all has the player's name.
-    if (!playerMatchedComps.length) {
-      console.log(`[SCP] No player name match for "${rawQuery}" — ${comps.length} results, none contained player tokens`);
+    if (!validComps.length) {
+      console.log(`[SCP] No match for "${rawQuery}" — ${comps.length} results, none scored > 0.4`);
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
       await prisma.marketPriceCache.upsert({
         where: { query },
@@ -204,9 +213,9 @@ export async function getMarketPrices(
       return null;
     }
 
-    const compsForPrice = validComps.length ? validComps : playerMatchedComps;
+    const compsForPrice = validComps;
     console.log(
-      `[SCP] "${rawQuery}" — ${validComps.length} high-conf / ${playerMatchedComps.length} player-match / ${comps.length} total → using ${compsForPrice.length}`
+      `[SCP] "${rawQuery}" — ${validComps.length}/${comps.length} comps passed confidence > 0.4`
     );
 
     // ── 5. Median final price and ranges ──────────────────────────────────
@@ -229,7 +238,11 @@ export async function getMarketPrices(
       return null;
     }
 
-    let finalPrice = median(ungradedPrices);
+    // Trim extreme outliers before computing median and ranges
+    const trimmedUngraded = trimOutliers(ungradedPrices);
+    const trimmedPsa10 = trimOutliers(psa10Prices);
+
+    let finalPrice = median(trimmedUngraded.length ? trimmedUngraded : ungradedPrices);
 
     // ── 6. Outlier protection ───────────────────────────────────────────────
     if (cached) {
@@ -286,11 +299,11 @@ export async function getMarketPrices(
       productName: bestComp.productName,
       scpProductId: bestComp.productId,
       ungraded: finalPrice,
-      ungradedMin: ungradedPrices.length ? Math.min(...ungradedPrices) : null,
-      ungradedMax: ungradedPrices.length ? Math.max(...ungradedPrices) : null,
+      ungradedMin: trimmedUngraded.length ? Math.min(...trimmedUngraded) : null,
+      ungradedMax: trimmedUngraded.length ? Math.max(...trimmedUngraded) : null,
       psa10: bestComp.psa10,
-      psa10Min: psa10Prices.length ? Math.min(...psa10Prices) : null,
-      psa10Max: psa10Prices.length ? Math.max(...psa10Prices) : null,
+      psa10Min: trimmedPsa10.length ? Math.min(...trimmedPsa10) : null,
+      psa10Max: trimmedPsa10.length ? Math.max(...trimmedPsa10) : null,
     };
   } catch (e) {
     console.error("[SCP] Error:", e);
