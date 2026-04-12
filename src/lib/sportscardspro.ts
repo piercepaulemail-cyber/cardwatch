@@ -28,12 +28,24 @@ function normalizeQuery(player: string, desc: string): string {
 
 /**
  * Score a product name against query tokens.
- * Returns fraction of meaningful tokens (len >= 2) found in the product name.
+ * Player name tokens are MANDATORY — if any player token is missing from the
+ * product name the score is 0, regardless of other token matches.
+ * Returns fraction of all meaningful tokens (len >= 2) found in the product name.
  */
-function scoreConfidence(queryTokens: string[], productName: string): number {
+function scoreConfidence(
+  queryTokens: string[],
+  productName: string,
+  playerTokens: string[]
+): number {
+  const nameLower = productName.toLowerCase();
+
+  // Player name is required — every player token must appear in the product name
+  if (playerTokens.length > 0 && !playerTokens.every((t) => nameLower.includes(t))) {
+    return 0;
+  }
+
   const meaningful = queryTokens.filter((t) => t.length >= 2);
   if (!meaningful.length) return 0;
-  const nameLower = productName.toLowerCase();
   const matched = meaningful.filter((t) => nameLower.includes(t)).length;
   return matched / meaningful.length;
 }
@@ -96,11 +108,14 @@ export async function getMarketPrices(
         .catch(() => {});
 
       const comps = cached.prices as unknown as Comp[];
-      const validComps = comps.filter((c) => c.confidence > 0.7);
-      const compsForPrice = validComps.length ? validComps : comps;
-      const cachedUngradedPrices = compsForPrice.map((c) => c.ungraded).filter((v): v is number => v !== null);
-      const cachedPsa10Prices = compsForPrice.map((c) => c.psa10).filter((v): v is number => v !== null);
-      const best = comps.find((c) => c.confidence === Math.max(...comps.map((x) => x.confidence))) ?? comps[0];
+      // Empty comps array = cached "no match" — return null
+      if (!comps.length || cached.finalPrice === 0) return null;
+      const cachedUngradedPrices = comps.map((c) => c.ungraded).filter((v): v is number => v !== null);
+      const cachedPsa10Prices = comps.map((c) => c.psa10).filter((v): v is number => v !== null);
+      const best = comps.reduce(
+        (b, c) => (c.confidence > b.confidence ? c : b),
+        comps[0]
+      );
       return {
         productName: best?.productName ?? null,
         scpProductId: best?.productId ?? null,
@@ -148,30 +163,45 @@ export async function getMarketPrices(
 
     // ── 3 & 4. Score and filter comps ──────────────────────────────────────
     const queryTokens = query.split(/\s+/);
+    // Player tokens must appear in every matched product — no set-level fallback
+    const playerTokens = playerName.toLowerCase().split(/\s+/).filter((t) => t.length >= 2);
+
     const comps: Comp[] = products.map((p) => ({
       productId: String(p.id ?? ""),
       productName: String(p["product-name"] ?? ""),
-      confidence: scoreConfidence(queryTokens, String(p["product-name"] ?? "")),
+      confidence: scoreConfidence(queryTokens, String(p["product-name"] ?? ""), playerTokens),
       ungraded: pennies(p["loose-price"]),
       psa9: pennies(p["graded-price"]),
       psa10: pennies(p["manual-only-price"]),
     }));
 
     const validComps = comps.filter((c) => c.confidence > 0.7);
-    const compsForPrice = validComps.length ? validComps : comps; // fall back to all if none pass
+
+    // If no player-specific match found, cache a miss and return null.
+    // Showing a generic set range is worse than showing nothing.
+    if (!validComps.length) {
+      console.log(`[SCP] No player-specific match for "${rawQuery}" — ${comps.length} results had no player name match`);
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+      await prisma.marketPriceCache.upsert({
+        where: { query },
+        create: { query, prices: JSON.parse(JSON.stringify([])), finalPrice: 0, confidenceScore: 0, source: "scp", expiresAt },
+        update: { prices: JSON.parse(JSON.stringify([])), finalPrice: 0, confidenceScore: 0, expiresAt },
+      }).catch(() => {});
+      return null;
+    }
 
     // ── 5. Median final price and ranges ──────────────────────────────────
-    const ungradedPrices = compsForPrice
+    const ungradedPrices = validComps
       .map((c) => c.ungraded)
       .filter((v): v is number => v !== null);
-    const psa10Prices = compsForPrice
+    const psa10Prices = validComps
       .map((c) => c.psa10)
       .filter((v): v is number => v !== null);
 
     if (!ungradedPrices.length) {
       // Cache the miss
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-      const compsJson = JSON.parse(JSON.stringify(comps));
+      const compsJson = JSON.parse(JSON.stringify(validComps));
       await prisma.marketPriceCache.upsert({
         where: { query },
         create: { query, prices: compsJson, finalPrice: 0, confidenceScore: 0, source: "scp", expiresAt },
@@ -196,14 +226,12 @@ export async function getMarketPrices(
 
     // ── 7. Dynamic TTL ─────────────────────────────────────────────────────
     const avgConfidence =
-      validComps.length > 0
-        ? validComps.reduce((s, c) => s + c.confidence, 0) / validComps.length
-        : comps.reduce((s, c) => s + c.confidence, 0) / comps.length;
+      validComps.reduce((s, c) => s + c.confidence, 0) / validComps.length;
 
     const expiresAt = new Date(Date.now() + getTtlMs(avgConfidence));
 
     // ── 8. Upsert cache ─────────────────────────────────────────────────────
-    const pricesJson = JSON.parse(JSON.stringify(validComps.length ? validComps : comps));
+    const pricesJson = JSON.parse(JSON.stringify(validComps));
     await prisma.marketPriceCache.upsert({
       where: { query },
       create: {
@@ -225,11 +253,10 @@ export async function getMarketPrices(
     }).catch((e) => console.error("[SCP] Cache write error:", e));
 
     // Pick the best comp for psa9/psa10
-    const bestComp =
-      (validComps.length ? validComps : comps).reduce(
-        (best, c) => (c.confidence > best.confidence ? c : best),
-        (validComps.length ? validComps : comps)[0]
-      );
+    const bestComp = validComps.reduce(
+      (best, c) => (c.confidence > best.confidence ? c : best),
+      validComps[0]
+    );
 
     console.log(
       `[SCP] "${rawQuery}" → ${validComps.length}/${comps.length} valid comps, ` +
