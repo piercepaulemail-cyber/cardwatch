@@ -27,48 +27,8 @@ function normalizeQuery(player: string, desc: string): string {
   return `${player} ${desc}`.toLowerCase().trim().replace(/\s+/g, " ");
 }
 
-/**
- * Score how well an SCP product matches our query.
- *
- * Matches tokens against BOTH the product name ("Jaxson Dart [Silver] #332")
- * and the set name ("Football Cards 2025 Panini Prizm"). SCP splits these
- * into separate fields, but users search with combined terms like
- * "Jaxson Dart Silver Prizm" where "Prizm" is the set, not the product.
- *
- * Gate: product must contain at least one player name token (hard reject → 0).
- * Last name match floors the score at 0.5.
- */
-function scoreConfidence(
-  queryTokens: string[],
-  productName: string,
-  setName: string,
-  playerTokens: string[]
-): number {
-  // Score against combined product name + set name
-  const combined = `${productName} ${setName}`.toLowerCase();
-
-  const hasAnyPlayerToken = playerTokens.some((t) => combined.includes(t));
-  if (!hasAnyPlayerToken) return 0;
-
-  const meaningful = queryTokens.filter((t) => t.length >= 2);
-  if (!meaningful.length) return 0;
-  const matched = meaningful.filter((t) => combined.includes(t)).length;
-  let score = matched / meaningful.length;
-
-  const lastName = playerTokens.at(-1) ?? "";
-  if (lastName && combined.includes(lastName)) {
-    score = Math.max(score, 0.5);
-  }
-
-  return score;
-}
-
-/** TTL in ms based on confidence score */
-function getTtlMs(confidenceScore: number): number {
-  if (confidenceScore > 0.9) return 7 * 24 * 60 * 60 * 1000;   // 7 days
-  if (confidenceScore > 0.75) return 24 * 60 * 60 * 1000;       // 1 day
-  return 15 * 60 * 1000;                                          // 15 minutes
-}
+/** Cache TTL: 24 hours for all SCP data */
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** SCP cents-to-dollars conversion */
 function pennies(val: unknown): number | null {
@@ -146,31 +106,21 @@ export async function getMarketPrices(
       return null;
     }
 
-    // ── 3. Score and pick the single best match ────────────────────────────
-    const queryTokens = query.split(/\s+/);
-    const playerTokens = playerName.toLowerCase().split(/\s+/).filter((t) => t.length >= 2);
-
+    // ── 3. Use the first SCP result that has a price ─────────────────────
+    // SCP already ranks results by relevance — no need to re-score them.
     const comps: Comp[] = products.map((p) => ({
       productId: String(p.id ?? ""),
       productName: String(p["product-name"] ?? ""),
-      confidence: scoreConfidence(
-        queryTokens,
-        String(p["product-name"] ?? ""),
-        String(p["console-name"] ?? ""),
-        playerTokens
-      ),
+      confidence: 1,
       ungraded: pennies(p["loose-price"]),
       psa9: pennies(p["graded-price"]),
       psa10: pennies(p["manual-only-price"]),
     }));
 
-    // Pick the single highest-confidence match that has a price
-    const bestMatch = comps
-      .filter((c) => c.confidence > 0.4 && c.ungraded !== null)
-      .sort((a, b) => b.confidence - a.confidence)[0];
+    const bestMatch = comps.find((c) => c.ungraded !== null);
 
     if (!bestMatch) {
-      console.log(`[SCP] No match for "${rawQuery}" — ${comps.length} results, none scored > 0.4 with price`);
+      console.log(`[SCP] No priced result for "${rawQuery}" — ${comps.length} results, none had a price`);
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
       await prisma.marketPriceCache.upsert({
         where: { query },
@@ -180,9 +130,9 @@ export async function getMarketPrices(
       return null;
     }
 
-    // ── 4. Use best match's prices directly ────────────────────────────────
+    // ── 4. Use this product's prices directly ──────────────────────────────
     const finalPrice = bestMatch.ungraded!;
-    const expiresAt = new Date(Date.now() + getTtlMs(bestMatch.confidence));
+    const expiresAt = new Date(Date.now() + CACHE_TTL_MS);
 
     // Cache as single-comp array (best match first)
     const pricesJson = JSON.parse(JSON.stringify([bestMatch]));
@@ -190,12 +140,12 @@ export async function getMarketPrices(
       where: { query },
       create: {
         query, prices: pricesJson, finalPrice,
-        confidenceScore: bestMatch.confidence,
+        confidenceScore: 1,
         source: "scp", expiresAt, lastValidatedAt: new Date(),
       },
       update: {
         prices: pricesJson, finalPrice,
-        confidenceScore: bestMatch.confidence,
+        confidenceScore: 1,
         expiresAt, lastValidatedAt: new Date(),
       },
     }).catch((e) => console.error("[SCP] Cache write error:", e));
@@ -250,4 +200,13 @@ export async function refreshMarketPrices(): Promise<number> {
 
   console.log(`[SCP] Refreshed ${refreshed}/${stale.length} market prices`);
   return refreshed;
+}
+
+/**
+ * Clear all cached market prices so they get re-fetched fresh from SCP.
+ */
+export async function clearMarketPriceCache(): Promise<number> {
+  const result = await prisma.marketPriceCache.deleteMany({});
+  console.log(`[SCP] Cleared ${result.count} cached market prices`);
+  return result.count;
 }

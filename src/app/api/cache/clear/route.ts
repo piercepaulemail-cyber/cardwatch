@@ -13,10 +13,7 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const now = new Date();
-  const { count } = await prisma.marketPriceCache.updateMany({
-    data: { expiresAt: now },
-  });
+  const { count } = await prisma.marketPriceCache.deleteMany({});
 
   console.log(`[Cache] Cleared ${count} market price cache entries`);
   return NextResponse.json({ success: true, cleared: count });
