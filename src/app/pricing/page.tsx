@@ -109,7 +109,7 @@ export default function PricingPage() {
             <div className="flex items-center gap-3">
               <span className="text-sm text-white/60">{session.user?.email}</span>
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => signOut()}
                 className="text-white/60 hover:text-white text-sm transition"
               >
                 Sign out
