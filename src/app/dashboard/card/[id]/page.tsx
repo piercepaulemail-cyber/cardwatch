@@ -21,9 +21,10 @@ interface CardDetail {
   matchedPlayer: string;
   matchedDesc: string;
   conditionDescriptor: string | null;
-  marketUngraded: number | null;
-  marketPsa9: number | null;
-  marketPsa10: number | null;
+  rawMin: number | null;
+  rawMax: number | null;
+  psa10Min: number | null;
+  psa10Max: number | null;
   scanTimestamp: string;
   images: string[];
 }
@@ -233,53 +234,51 @@ export default function CardDetailPage({
         </div>
 
         {/* Market Values */}
-        {(card.marketUngraded || card.marketPsa10) && (
+        {(card.rawMin || card.psa10Min) && (
           <div className="bg-navy/[0.03] rounded-xl p-4 mb-5 border border-border">
             <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-3 font-semibold">
-              Market Averages
+              Market Ranges
             </p>
-            <div className="grid grid-cols-3 gap-4">
-              {card.marketUngraded && (
+            <div className="grid grid-cols-2 gap-4">
+              {card.rawMin && (
                 <div>
                   <p className="text-xs text-muted-foreground">Raw</p>
                   <p className="text-lg font-extrabold text-navy">
-                    ${card.marketUngraded.toFixed(2)}
+                    {card.rawMin === card.rawMax
+                      ? `$${card.rawMin.toFixed(0)}`
+                      : `$${card.rawMin.toFixed(0)} – $${card.rawMax!.toFixed(0)}`}
                   </p>
                 </div>
               )}
-              {card.marketPsa9 && (
-                <div>
-                  <p className="text-xs text-muted-foreground">PSA 9</p>
-                  <p className="text-lg font-extrabold text-navy">
-                    ${card.marketPsa9.toFixed(2)}
-                  </p>
-                </div>
-              )}
-              {card.marketPsa10 && (
+              {card.psa10Min && (
                 <div>
                   <p className="text-xs text-muted-foreground">PSA 10</p>
                   <p className="text-lg font-extrabold text-navy">
-                    ${card.marketPsa10.toFixed(2)}
+                    {card.psa10Min === card.psa10Max
+                      ? `$${card.psa10Min.toFixed(0)}`
+                      : `$${card.psa10Min.toFixed(0)} – $${card.psa10Max!.toFixed(0)}`}
                   </p>
                 </div>
               )}
             </div>
-            {card.marketUngraded && card.currentPrice > 0 && (
+            {card.rawMin && card.rawMax && card.currentPrice > 0 && (
               <div className="mt-3 pt-3 border-t border-border">
-                <p className="text-xs text-muted-foreground">
-                  Listed at{" "}
-                  <span
-                    className={`font-bold ${
-                      card.currentPrice / card.marketUngraded <= 0.75
-                        ? "text-green"
-                        : card.currentPrice / card.marketUngraded <= 1
-                          ? "text-gold"
-                          : "text-red-500"
-                    }`}
-                  >
-                    {Math.round((card.currentPrice / card.marketUngraded) * 100)}% of market avg
-                  </span>
-                </p>
+                {(() => {
+                  const mid = (card.rawMin + card.rawMax) / 2;
+                  const pct = Math.round((card.currentPrice / mid) * 100);
+                  return (
+                    <p className="text-xs text-muted-foreground">
+                      Listed at{" "}
+                      <span
+                        className={`font-bold ${
+                          pct <= 75 ? "text-green" : pct <= 100 ? "text-gold" : "text-red-500"
+                        }`}
+                      >
+                        {pct}% of market midpoint
+                      </span>
+                    </p>
+                  );
+                })()}
               </div>
             )}
             <p className="text-[9px] text-muted-foreground/50 mt-2">

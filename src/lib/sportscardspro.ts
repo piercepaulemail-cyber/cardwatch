@@ -6,8 +6,11 @@ export interface MarketPrices {
   productName: string | null;
   scpProductId: string | null;
   ungraded: number | null;
-  psa9: number | null;
+  ungradedMin: number | null;
+  ungradedMax: number | null;
   psa10: number | null;
+  psa10Min: number | null;
+  psa10Max: number | null;
 }
 
 interface Comp {
@@ -93,13 +96,20 @@ export async function getMarketPrices(
         .catch(() => {});
 
       const comps = cached.prices as unknown as Comp[];
+      const validComps = comps.filter((c) => c.confidence > 0.7);
+      const compsForPrice = validComps.length ? validComps : comps;
+      const cachedUngradedPrices = compsForPrice.map((c) => c.ungraded).filter((v): v is number => v !== null);
+      const cachedPsa10Prices = compsForPrice.map((c) => c.psa10).filter((v): v is number => v !== null);
       const best = comps.find((c) => c.confidence === Math.max(...comps.map((x) => x.confidence))) ?? comps[0];
       return {
         productName: best?.productName ?? null,
         scpProductId: best?.productId ?? null,
         ungraded: cached.finalPrice,
-        psa9: best?.psa9 ?? null,
+        ungradedMin: cachedUngradedPrices.length ? Math.min(...cachedUngradedPrices) : null,
+        ungradedMax: cachedUngradedPrices.length ? Math.max(...cachedUngradedPrices) : null,
         psa10: best?.psa10 ?? null,
+        psa10Min: cachedPsa10Prices.length ? Math.min(...cachedPsa10Prices) : null,
+        psa10Max: cachedPsa10Prices.length ? Math.max(...cachedPsa10Prices) : null,
       };
     }
 
@@ -150,9 +160,12 @@ export async function getMarketPrices(
     const validComps = comps.filter((c) => c.confidence > 0.7);
     const compsForPrice = validComps.length ? validComps : comps; // fall back to all if none pass
 
-    // ── 5. Median final price ───────────────────────────────────────────────
+    // ── 5. Median final price and ranges ──────────────────────────────────
     const ungradedPrices = compsForPrice
       .map((c) => c.ungraded)
+      .filter((v): v is number => v !== null);
+    const psa10Prices = compsForPrice
+      .map((c) => c.psa10)
       .filter((v): v is number => v !== null);
 
     if (!ungradedPrices.length) {
@@ -228,8 +241,11 @@ export async function getMarketPrices(
       productName: bestComp.productName,
       scpProductId: bestComp.productId,
       ungraded: finalPrice,
-      psa9: bestComp.psa9,
+      ungradedMin: ungradedPrices.length ? Math.min(...ungradedPrices) : null,
+      ungradedMax: ungradedPrices.length ? Math.max(...ungradedPrices) : null,
       psa10: bestComp.psa10,
+      psa10Min: psa10Prices.length ? Math.min(...psa10Prices) : null,
+      psa10Max: psa10Prices.length ? Math.max(...psa10Prices) : null,
     };
   } catch (e) {
     console.error("[SCP] Error:", e);

@@ -51,11 +51,7 @@ export async function GET(
     images = [result.imageUrl.replace(/s-l\d+\./, "s-l1600.")];
   }
 
-  // Fetch market prices (cached, 7-day TTL)
-  let marketUngraded = result.marketUngraded;
-  let marketPsa9 = result.marketPsa9;
-  let marketPsa10 = result.marketPsa10;
-
+  // Always fetch market prices — getMarketPrices has its own cache (MarketPriceCache table)
   const needsMarketData =
     !result.marketLastFetched ||
     Date.now() - result.marketLastFetched.getTime() > 7 * 24 * 60 * 60 * 1000;
@@ -63,33 +59,30 @@ export async function GET(
   console.log(`[Detail] Market data needed: ${needsMarketData}, player: ${result.matchedPlayer}, desc: ${result.matchedDesc}`);
   console.log(`[Detail] SCP_API_KEY set: ${!!process.env.SCP_API_KEY}`);
 
-  if (needsMarketData) {
-    const market = await getMarketPrices(result.matchedPlayer, result.matchedDesc);
-    console.log(`[Detail] Market result:`, JSON.stringify(market));
-    if (market) {
-      marketUngraded = market.ungraded;
-      marketPsa9 = market.psa9;
-      marketPsa10 = market.psa10;
+  const market = await getMarketPrices(result.matchedPlayer, result.matchedDesc);
+  console.log(`[Detail] Market result:`, JSON.stringify(market));
 
-      await prisma.scanResult.update({
-        where: { id },
-        data: {
-          marketUngraded: market.ungraded,
-          marketPsa9: market.psa9,
-          marketPsa10: market.psa10,
-          marketLastFetched: new Date(),
-        },
-      }).catch(() => {});
-    }
+  if (needsMarketData && market) {
+    await prisma.scanResult.update({
+      where: { id },
+      data: {
+        marketUngraded: market.ungraded,
+        marketPsa10: market.psa10,
+        marketLastFetched: new Date(),
+      },
+    }).catch(() => {});
   }
 
+  const { marketUngraded: _u, marketPsa9: _p9, marketPsa10: _p10, ...resultRest } = result;
+
   const response = NextResponse.json({
-    ...result,
+    ...resultRest,
     conditionDescriptor: condition,
     images,
-    marketUngraded,
-    marketPsa9,
-    marketPsa10,
+    rawMin: market?.ungradedMin ?? null,
+    rawMax: market?.ungradedMax ?? null,
+    psa10Min: market?.psa10Min ?? null,
+    psa10Max: market?.psa10Max ?? null,
   });
 
   // Prevent caching so market data always fetches fresh
