@@ -64,6 +64,7 @@ export default function CardDetailPage({
   const [loading, setLoading] = useState(true);
   const [imgIndex, setImgIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
+  const wasMultiTouch = useRef(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -131,9 +132,19 @@ export default function CardDetailPage({
             {/* Main image */}
             <div
               className="relative rounded-xl overflow-hidden border border-border bg-secondary"
-              onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+              onTouchStart={(e) => {
+                wasMultiTouch.current = e.touches.length > 1;
+                touchStartX.current = e.touches[0].clientX;
+              }}
+              onTouchMove={(e) => {
+                if (e.touches.length > 1) wasMultiTouch.current = true;
+              }}
               onTouchEnd={(e) => {
-                if (touchStartX.current === null || card.images.length <= 1) return;
+                if (touchStartX.current === null || card.images.length <= 1 || wasMultiTouch.current) {
+                  touchStartX.current = null;
+                  wasMultiTouch.current = false;
+                  return;
+                }
                 const delta = e.changedTouches[0].clientX - touchStartX.current;
                 touchStartX.current = null;
                 if (Math.abs(delta) < 50) return;
