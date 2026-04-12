@@ -28,8 +28,10 @@ function normalizeQuery(player: string, desc: string): string {
 
 /**
  * Score a product name against query tokens.
- * Player name tokens are MANDATORY — if any player token is missing from the
- * product name the score is 0, regardless of other token matches.
+ *
+ * Gate: product must contain at least one player name token (hard reject → 0).
+ * Last name match floors the score at 0.5 — SCP often uses abbreviated first
+ * names ("T. McMillan") so requiring the full name is too aggressive.
  * Returns fraction of all meaningful tokens (len >= 2) found in the product name.
  */
 function scoreConfidence(
@@ -39,15 +41,24 @@ function scoreConfidence(
 ): number {
   const nameLower = productName.toLowerCase();
 
-  // Player name is required — every player token must appear in the product name
-  if (playerTokens.length > 0 && !playerTokens.every((t) => nameLower.includes(t))) {
-    return 0;
-  }
+  // Hard reject: must have at least one player token match.
+  // Using "every" was too strict — SCP often abbreviates first names.
+  const hasAnyPlayerToken = playerTokens.some((t) => nameLower.includes(t));
+  if (!hasAnyPlayerToken) return 0;
 
   const meaningful = queryTokens.filter((t) => t.length >= 2);
   if (!meaningful.length) return 0;
   const matched = meaningful.filter((t) => nameLower.includes(t)).length;
-  return matched / meaningful.length;
+  let score = matched / meaningful.length;
+
+  // Last name is the most reliable identifier. If it matches, guarantee at
+  // least 0.5 even when set/year tokens aren't in the SCP product name field.
+  const lastName = playerTokens.at(-1) ?? "";
+  if (lastName && nameLower.includes(lastName)) {
+    score = Math.max(score, 0.5);
+  }
+
+  return score;
 }
 
 function median(values: number[]): number {
@@ -175,12 +186,15 @@ export async function getMarketPrices(
       psa10: pennies(p["manual-only-price"]),
     }));
 
+    // High-confidence comps (all key tokens match)
     const validComps = comps.filter((c) => c.confidence > 0.7);
+    // Player-matched comps (at least one player token matched — confidence > 0)
+    const playerMatchedComps = comps.filter((c) => c.confidence > 0);
 
-    // If no player-specific match found, cache a miss and return null.
-    // Showing a generic set range is worse than showing nothing.
-    if (!validComps.length) {
-      console.log(`[SCP] No player-specific match for "${rawQuery}" — ${comps.length} results had no player name match`);
+    // Prefer high-confidence → fall back to any player-name match.
+    // Only return null if nothing at all has the player's name.
+    if (!playerMatchedComps.length) {
+      console.log(`[SCP] No player name match for "${rawQuery}" — ${comps.length} results, none contained player tokens`);
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
       await prisma.marketPriceCache.upsert({
         where: { query },
@@ -190,18 +204,23 @@ export async function getMarketPrices(
       return null;
     }
 
+    const compsForPrice = validComps.length ? validComps : playerMatchedComps;
+    console.log(
+      `[SCP] "${rawQuery}" — ${validComps.length} high-conf / ${playerMatchedComps.length} player-match / ${comps.length} total → using ${compsForPrice.length}`
+    );
+
     // ── 5. Median final price and ranges ──────────────────────────────────
-    const ungradedPrices = validComps
+    const ungradedPrices = compsForPrice
       .map((c) => c.ungraded)
       .filter((v): v is number => v !== null);
-    const psa10Prices = validComps
+    const psa10Prices = compsForPrice
       .map((c) => c.psa10)
       .filter((v): v is number => v !== null);
 
     if (!ungradedPrices.length) {
       // Cache the miss
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-      const compsJson = JSON.parse(JSON.stringify(validComps));
+      const compsJson = JSON.parse(JSON.stringify(compsForPrice));
       await prisma.marketPriceCache.upsert({
         where: { query },
         create: { query, prices: compsJson, finalPrice: 0, confidenceScore: 0, source: "scp", expiresAt },
@@ -226,12 +245,12 @@ export async function getMarketPrices(
 
     // ── 7. Dynamic TTL ─────────────────────────────────────────────────────
     const avgConfidence =
-      validComps.reduce((s, c) => s + c.confidence, 0) / validComps.length;
+      compsForPrice.reduce((s, c) => s + c.confidence, 0) / compsForPrice.length;
 
     const expiresAt = new Date(Date.now() + getTtlMs(avgConfidence));
 
     // ── 8. Upsert cache ─────────────────────────────────────────────────────
-    const pricesJson = JSON.parse(JSON.stringify(validComps));
+    const pricesJson = JSON.parse(JSON.stringify(compsForPrice));
     await prisma.marketPriceCache.upsert({
       where: { query },
       create: {
@@ -253,15 +272,14 @@ export async function getMarketPrices(
     }).catch((e) => console.error("[SCP] Cache write error:", e));
 
     // Pick the best comp for psa9/psa10
-    const bestComp = validComps.reduce(
+    const bestComp = compsForPrice.reduce(
       (best, c) => (c.confidence > best.confidence ? c : best),
-      validComps[0]
+      compsForPrice[0]
     );
 
     console.log(
-      `[SCP] "${rawQuery}" → ${validComps.length}/${comps.length} valid comps, ` +
-        `median=$${finalPrice.toFixed(2)}, confidence=${avgConfidence.toFixed(2)}, ` +
-        `TTL=${Math.round(getTtlMs(avgConfidence) / 60000)}m`
+      `[SCP] "${rawQuery}" → median=$${finalPrice.toFixed(2)}, ` +
+        `confidence=${avgConfidence.toFixed(2)}, TTL=${Math.round(getTtlMs(avgConfidence) / 60000)}m`
     );
 
     return {
