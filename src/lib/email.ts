@@ -1,5 +1,5 @@
-import nodemailer from "nodemailer";
 import type { EbayResult } from "./ebay";
+import { sendEmail } from "./mailer";
 
 interface EmailResult extends EbayResult {
   marketUngraded?: number | null;
@@ -131,39 +131,12 @@ export async function sendCardAlertEmail(
 ): Promise<void> {
   if (!results.length) return;
 
-  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-  const smtpPort = parseInt(process.env.SMTP_PORT || "587");
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || smtpUser;
-
   const subject = `CardWatch: ${results.length} new listing${results.length !== 1 ? "s" : ""} found`;
   const html = buildEmailHtml(results);
 
-  if (!smtpUser || !smtpPass) {
-    console.warn("[Email] No SMTP credentials configured (set SMTP_USER + SMTP_PASS)");
-    return;
-  }
-
   try {
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `CardWatch <${smtpFrom}>`,
-      to,
-      subject,
-      html,
-    });
-
-    console.log(`[Email] Sent to ${to} via ${smtpHost}`);
+    await sendEmail({ to, subject, html });
+    console.log(`[Email] Alert sent to ${to}`);
   } catch (e) {
     console.error("[Email] Send failed:", e);
   }

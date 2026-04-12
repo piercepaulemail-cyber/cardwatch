@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import nodemailer from "nodemailer";
 import { prisma } from "./db";
+import { sendEmail } from "./mailer";
 
 const TOKEN_EXPIRY_HOURS = 1;
 
@@ -49,17 +49,6 @@ export async function sendPasswordResetEmail(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://mycardwatch.com";
   const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
-  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-  const smtpPort = parseInt(process.env.SMTP_PORT || "587");
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM || smtpUser;
-
-  if (!smtpUser || !smtpPass) {
-    console.warn("[Password Reset] No SMTP credentials — skipping email");
-    return;
-  }
-
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#F5F6F8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
@@ -83,20 +72,7 @@ export async function sendPasswordResetEmail(
 </body></html>`;
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      auth: { user: smtpUser, pass: smtpPass },
-    });
-
-    await transporter.sendMail({
-      from: `CardWatch <${smtpFrom}>`,
-      to,
-      subject: "Reset your CardWatch password",
-      html,
-    });
-
+    await sendEmail({ to, subject: "Reset your CardWatch password", html });
     console.log(`[Password Reset] Email sent to ${to}`);
   } catch (e) {
     console.error("[Password Reset] Failed to send:", e);

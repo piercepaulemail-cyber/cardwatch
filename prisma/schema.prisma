@@ -117,16 +117,17 @@ model ScanResult {
 }
 
 model MarketPriceCache {
-  id           String   @id @default(cuid())
-  searchKey    String   @unique
-  scpProductId String?
-  productName  String?
-  ungraded     Float?
-  psa9         Float?
-  psa10        Float?
-  fetchedAt    DateTime @default(now())
-
-  @@index([searchKey])
+  id                String    @id @default(cuid())
+  query             String    @unique
+  prices            Json      // array of comps
+  finalPrice        Float
+  confidenceScore   Float
+  source            String?
+  hitCount          Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  expiresAt         DateTime
+  lastValidatedAt   DateTime?
 }
 
 model SearchCache {
