@@ -86,7 +86,7 @@ async function saveResultsForUser(
     // Enrich results with cached market prices (no extra API calls if already cached)
     const enrichedResults = await Promise.all(
       newResults.map(async (r) => {
-        const market = await getMarketPrices(r.matchedPlayer, r.matchedDesc).catch(() => null);
+        const market = await getMarketPrices(r.matchedPlayer, r.matchedDesc, r.title).catch(() => null);
         return {
           ...r,
           marketUngraded: market?.ungraded ?? null,

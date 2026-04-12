@@ -59,7 +59,7 @@ export async function GET(
   console.log(`[Detail] Market data needed: ${needsMarketData}, player: ${result.matchedPlayer}, desc: ${result.matchedDesc}`);
   console.log(`[Detail] SCP_API_KEY set: ${!!process.env.SCP_API_KEY}`);
 
-  const market = await getMarketPrices(result.matchedPlayer, result.matchedDesc);
+  const market = await getMarketPrices(result.matchedPlayer, result.matchedDesc, result.title);
   console.log(`[Detail] Market result:`, JSON.stringify(market));
 
   if (needsMarketData && market) {

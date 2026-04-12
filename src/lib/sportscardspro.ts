@@ -21,14 +21,9 @@ interface Comp {
   ungraded: number | null;
   psa9: number | null;
   psa10: number | null;
-  _hasPlayer?: boolean;
 }
 
-function normalizeQuery(player: string, desc: string): string {
-  return `${player} ${desc}`.toLowerCase().trim().replace(/\s+/g, " ");
-}
-
-/** Cache TTL: 24 hours for all SCP data */
+/** Cache TTL: 24 hours */
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** SCP cents-to-dollars conversion */
@@ -39,36 +34,59 @@ function pennies(val: unknown): number | null {
 }
 
 /**
+ * Clean an eBay listing title into a good SCP search query.
+ * Removes emojis, noise words, special chars — keeps the card info.
+ */
+function cleanTitle(title: string): string {
+  return title
+    // Strip emojis
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FA9F}\u{200D}\u{20E3}]/gu, "")
+    // Strip special chars except /# (used for numbering like /299 or #332)
+    .replace(/[!()[\]|*~_@&+=<>{}\\^`"']/g, " ")
+    // Remove noise words sellers add
+    .replace(/\b(NM|EX|VG|MT|MINT|GEM|NEAR MINT|PACK FRESH|CLEAN|HOT|FIRE|LOOK|WOW|RARE|L@@K|INVEST|SP|SSP|RC|ROOKIE|CARD|CARDS|SEE|PICS|DETAILS|LOT|CASE|HIT|SHIPPING|FREE|FAST|NEW|LISTING|FOR|THE|AND|OR)\b/gi, " ")
+    // Collapse whitespace
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
  * Get market prices from SportsCardsPro.
  *
- * Simple approach: find the single best-matching SCP product and use its
- * prices directly. No averaging across multiple products — each SCP product
- * represents a specific card, and mixing them creates inaccurate ranges.
+ * Uses the eBay listing title as the SCP search query — this is the most
+ * specific description of the card and matches what you'd type into SCP
+ * yourself. Each listing gets its own cached price.
+ *
+ * Falls back to playerName + cardDescription if no title is provided.
  */
 export async function getMarketPrices(
   playerName: string,
-  cardDescription: string
+  cardDescription: string,
+  ebayTitle?: string
 ): Promise<MarketPrices | null> {
   const apiKey = process.env.SCP_API_KEY;
   if (!apiKey) return null;
 
-  const query = normalizeQuery(playerName, cardDescription);
+  // Use the eBay title as the search query when available — it's the most
+  // specific description of the card. Fall back to watchlist terms.
+  const searchQuery = ebayTitle ? cleanTitle(ebayTitle) : `${playerName} ${cardDescription}`;
+  const cacheKey = searchQuery.toLowerCase().trim().replace(/\s+/g, " ");
 
   try {
     // ── 1. Cache check ─────────────────────────────────────────────────────
     const cached = await prisma.marketPriceCache.findUnique({
-      where: { query },
+      where: { query: cacheKey },
     });
 
     if (cached && cached.expiresAt > new Date()) {
       prisma.marketPriceCache
-        .update({ where: { query }, data: { hitCount: { increment: 1 } } })
+        .update({ where: { query: cacheKey }, data: { hitCount: { increment: 1 } } })
         .catch(() => {});
 
       const comps = cached.prices as unknown as Comp[];
       if (!comps.length || cached.finalPrice === 0) return null;
 
-      const best = comps[0]; // best match is always first
+      const best = comps[0];
       return {
         productName: best.productName,
         scpProductId: best.productId,
@@ -82,10 +100,10 @@ export async function getMarketPrices(
       };
     }
 
-    // ── 2. Fetch from SCP ───────────────────────────────────────────────────
-    const rawQuery = `${playerName} ${cardDescription}`;
+    // ── 2. Fetch from SCP using the listing title ──────────────────────────
+    console.log(`[SCP] Searching: "${searchQuery}"`);
     const resp = await fetch(
-      `${SCP_API_BASE}/products?t=${apiKey}&q=${encodeURIComponent(rawQuery)}`,
+      `${SCP_API_BASE}/products?t=${apiKey}&q=${encodeURIComponent(searchQuery)}`,
       { signal: AbortSignal.timeout(10000) }
     );
 
@@ -100,17 +118,16 @@ export async function getMarketPrices(
     if (!products.length) {
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
       await prisma.marketPriceCache.upsert({
-        where: { query },
-        create: { query, prices: JSON.parse(JSON.stringify([])), finalPrice: 0, confidenceScore: 0, source: "scp", expiresAt },
+        where: { query: cacheKey },
+        create: { query: cacheKey, prices: JSON.parse(JSON.stringify([])), finalPrice: 0, confidenceScore: 0, source: "scp", expiresAt },
         update: { prices: JSON.parse(JSON.stringify([])), finalPrice: 0, confidenceScore: 0, expiresAt },
       }).catch(() => {});
       return null;
     }
 
-    // ── 3. Find the first SCP result for this player that has a price ────
-    // SCP ranks by relevance, but for generic terms like "Downtown" it may
-    // return a different player's card first. So we check that the player's
-    // last name appears in the product name or set name.
+    // ── 3. Use the first result with a price ───────────────────────────────
+    // The eBay title is specific enough that SCP's first result is the right
+    // card. Just verify the player's last name is in the product/set name.
     const lastName = playerName.toLowerCase().split(/\s+/).filter((t) => t.length >= 2).at(-1) ?? "";
 
     const comps: Comp[] = products.map((p) => {
@@ -126,17 +143,16 @@ export async function getMarketPrices(
       };
     });
 
-    // First try: player name match + has price. Fallback: any result with price.
     const bestMatch =
-      comps.find((c) => c._hasPlayer && c.ungraded !== null) ??
+      comps.find((c) => (c as Comp & { _hasPlayer: boolean })._hasPlayer && c.ungraded !== null) ??
       comps.find((c) => c.ungraded !== null);
 
     if (!bestMatch) {
-      console.log(`[SCP] No priced result for "${rawQuery}" — ${comps.length} results, none had a price`);
+      console.log(`[SCP] No priced result for "${searchQuery}"`);
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
       await prisma.marketPriceCache.upsert({
-        where: { query },
-        create: { query, prices: JSON.parse(JSON.stringify([])), finalPrice: 0, confidenceScore: 0, source: "scp", expiresAt },
+        where: { query: cacheKey },
+        create: { query: cacheKey, prices: JSON.parse(JSON.stringify([])), finalPrice: 0, confidenceScore: 0, source: "scp", expiresAt },
         update: { prices: JSON.parse(JSON.stringify([])), finalPrice: 0, confidenceScore: 0, expiresAt },
       }).catch(() => {});
       return null;
@@ -146,26 +162,22 @@ export async function getMarketPrices(
     const finalPrice = bestMatch.ungraded!;
     const expiresAt = new Date(Date.now() + CACHE_TTL_MS);
 
-    // Cache as single-comp array (best match first)
     const pricesJson = JSON.parse(JSON.stringify([bestMatch]));
     await prisma.marketPriceCache.upsert({
-      where: { query },
+      where: { query: cacheKey },
       create: {
-        query, prices: pricesJson, finalPrice,
-        confidenceScore: 1,
-        source: "scp", expiresAt, lastValidatedAt: new Date(),
+        query: cacheKey, prices: pricesJson, finalPrice,
+        confidenceScore: 1, source: "scp", expiresAt, lastValidatedAt: new Date(),
       },
       update: {
-        prices: pricesJson, finalPrice,
-        confidenceScore: 1,
+        prices: pricesJson, finalPrice, confidenceScore: 1,
         expiresAt, lastValidatedAt: new Date(),
       },
     }).catch((e) => console.error("[SCP] Cache write error:", e));
 
     console.log(
-      `[SCP] "${rawQuery}" → best="${bestMatch.productName}" raw=$${finalPrice.toFixed(2)} ` +
-        `psa10=${bestMatch.psa10 ? `$${bestMatch.psa10.toFixed(2)}` : "n/a"} ` +
-        `confidence=${bestMatch.confidence.toFixed(2)}`
+      `[SCP] "${searchQuery}" → "${bestMatch.productName}" raw=$${finalPrice.toFixed(2)} ` +
+        `psa10=${bestMatch.psa10 ? `$${bestMatch.psa10.toFixed(2)}` : "n/a"}`
     );
 
     return {
@@ -187,7 +199,6 @@ export async function getMarketPrices(
 
 /**
  * Refresh all expired cache entries.
- * Called by the weekly cron job.
  */
 export async function refreshMarketPrices(): Promise<number> {
   const apiKey = process.env.SCP_API_KEY;
