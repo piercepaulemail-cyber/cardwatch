@@ -23,9 +23,28 @@ function getRateLimiter(): Ratelimit | null {
   return _rateLimiter;
 }
 
+/** In-memory fallback when Redis is unavailable */
+const fallbackStore = new Map<string, { count: number; resetAt: number }>();
+
+function fallbackLimit(key: string, max: number, windowMs: number): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const entry = fallbackStore.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    fallbackStore.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, remaining: max - 1 };
+  }
+
+  entry.count++;
+  if (entry.count > max) {
+    return { allowed: false, remaining: 0 };
+  }
+  return { allowed: true, remaining: max - entry.count };
+}
+
 /**
  * Rate limit by key. Returns { allowed, remaining }.
- * Falls back to always-allowed if Upstash is not configured.
+ * Falls back to in-memory rate limiting if Upstash is unavailable.
  */
 export async function rateLimit(
   key: string,
@@ -35,14 +54,15 @@ export async function rateLimit(
   const limiter = getRateLimiter();
 
   if (!limiter) {
-    return { allowed: true, remaining: 999 };
+    // Fallback: in-memory rate limiting (5 per 15 min)
+    return fallbackLimit(key, 5, 15 * 60 * 1000);
   }
 
   try {
     const result = await limiter.limit(key);
     return { allowed: result.success, remaining: result.remaining };
   } catch (e) {
-    console.error("[RateLimit] Error:", e);
-    return { allowed: true, remaining: 999 }; // fail open
+    console.error("[RateLimit] Redis error, using in-memory fallback:", e);
+    return fallbackLimit(key, 5, 15 * 60 * 1000);
   }
 }

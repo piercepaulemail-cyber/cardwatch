@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
+import { getStripe } from "@/lib/stripe";
 
 export async function GET() {
   const session = await auth();
@@ -57,6 +58,16 @@ export async function DELETE() {
   const { allowed } = await rateLimit(`delete-account:${session.user.id}`);
   if (!allowed) {
     return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
+  }
+
+  // Cancel Stripe subscription before deleting records
+  const sub = await prisma.subscription.findUnique({ where: { userId: session.user.id } });
+  if (sub?.stripeSubscriptionId) {
+    try {
+      await getStripe().subscriptions.cancel(sub.stripeSubscriptionId);
+    } catch (e) {
+      console.error("[User] Failed to cancel Stripe subscription:", e);
+    }
   }
 
   // Delete all user data

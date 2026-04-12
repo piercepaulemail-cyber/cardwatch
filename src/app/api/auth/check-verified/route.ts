@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const { email } = await request.json();
 
   if (!email) {
-    return NextResponse.json({ error: "Email required" }, { status: 400 });
+    return NextResponse.json({ exists: false, verified: false });
+  }
+
+  // Rate limit to prevent enumeration
+  const { allowed } = await rateLimit(`check-verified:${String(email).trim().toLowerCase()}`);
+  if (!allowed) {
+    return NextResponse.json({ exists: false, verified: false });
   }
 
   const user = await prisma.user.findUnique({
@@ -13,13 +20,11 @@ export async function POST(request: Request) {
     select: { emailVerified: true, passwordHash: true },
   });
 
-  if (!user || !user.passwordHash) {
-    // User doesn't exist or is Google-only — don't reveal
-    return NextResponse.json({ exists: false });
+  // Only reveal unverified status (user needs to know to check their email).
+  // For all other cases (not found, verified, Google-only), return the same response.
+  if (user && user.passwordHash && !user.emailVerified) {
+    return NextResponse.json({ exists: true, verified: false });
   }
 
-  return NextResponse.json({
-    exists: true,
-    verified: !!user.emailVerified,
-  });
+  return NextResponse.json({ exists: false, verified: false });
 }

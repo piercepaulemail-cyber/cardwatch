@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { TIERS, type TierKey } from "@/lib/stripe";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Please sign in first" }, { status: 401 });
+  }
+
+  const { allowed } = await rateLimit(`invite-redeem:${session.user.id}`);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
   }
 
   const { code } = await request.json();

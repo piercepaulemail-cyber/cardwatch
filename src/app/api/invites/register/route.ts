@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * Register + auto-verify for invite code redemption.
  * Skips email verification since the user has a valid invite code.
  */
 export async function POST(request: Request) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
+  const { allowed } = await rateLimit(`invite-register:${ip}`);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
+  }
+
   const { email, password, name, code } = await request.json();
 
   if (!email || !password || !code) {

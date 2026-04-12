@@ -1,4 +1,4 @@
-import { NextResponse, connection } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 
 export const dynamic = "force-dynamic";
 
@@ -52,22 +52,21 @@ function scoreConfidenceDebug(
   return { score: Math.min(score, 1.0), matched: matchedTokens, misses: missedTokens, playerHit: true, lastNameHit };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   await connection();
 
-  const apiKey = process.env.SCP_API_KEY || process.env.scp_api_key;
+  // Require CRON_SECRET to access this debug endpoint
+  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = request.headers.get("authorization")?.replace("Bearer ", "");
+  if (!cronSecret || authHeader !== cronSecret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-  const allEnvKeys = Object.keys(process.env).filter(
-    (k) => k.toLowerCase().includes("scp") || k.toLowerCase().includes("api_key")
-  );
+  const apiKey = process.env.SCP_API_KEY || process.env.scp_api_key;
 
   const results: Record<string, unknown> = {
     step1_env_check: {
       SCP_API_KEY_exists: !!apiKey,
-      SCP_API_KEY_length: apiKey?.length || 0,
-      SCP_API_KEY_first5: apiKey?.substring(0, 5) || "MISSING",
-      matching_env_vars: allEnvKeys,
-      total_env_count: Object.keys(process.env).length,
     },
     step2_api_call: null,
     step3_scoring: null,
