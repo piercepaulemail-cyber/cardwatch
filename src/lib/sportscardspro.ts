@@ -28,29 +28,35 @@ function normalizeQuery(player: string, desc: string): string {
 }
 
 /**
- * Score how well an SCP product name matches our query.
+ * Score how well an SCP product matches our query.
+ *
+ * Matches tokens against BOTH the product name ("Jaxson Dart [Silver] #332")
+ * and the set name ("Football Cards 2025 Panini Prizm"). SCP splits these
+ * into separate fields, but users search with combined terms like
+ * "Jaxson Dart Silver Prizm" where "Prizm" is the set, not the product.
  *
  * Gate: product must contain at least one player name token (hard reject → 0).
  * Last name match floors the score at 0.5.
- * Returns fraction of meaningful tokens (len >= 2) found in the product name.
  */
 function scoreConfidence(
   queryTokens: string[],
   productName: string,
+  setName: string,
   playerTokens: string[]
 ): number {
-  const nameLower = productName.toLowerCase();
+  // Score against combined product name + set name
+  const combined = `${productName} ${setName}`.toLowerCase();
 
-  const hasAnyPlayerToken = playerTokens.some((t) => nameLower.includes(t));
+  const hasAnyPlayerToken = playerTokens.some((t) => combined.includes(t));
   if (!hasAnyPlayerToken) return 0;
 
   const meaningful = queryTokens.filter((t) => t.length >= 2);
   if (!meaningful.length) return 0;
-  const matched = meaningful.filter((t) => nameLower.includes(t)).length;
+  const matched = meaningful.filter((t) => combined.includes(t)).length;
   let score = matched / meaningful.length;
 
   const lastName = playerTokens.at(-1) ?? "";
-  if (lastName && nameLower.includes(lastName)) {
+  if (lastName && combined.includes(lastName)) {
     score = Math.max(score, 0.5);
   }
 
@@ -147,7 +153,12 @@ export async function getMarketPrices(
     const comps: Comp[] = products.map((p) => ({
       productId: String(p.id ?? ""),
       productName: String(p["product-name"] ?? ""),
-      confidence: scoreConfidence(queryTokens, String(p["product-name"] ?? ""), playerTokens),
+      confidence: scoreConfidence(
+        queryTokens,
+        String(p["product-name"] ?? ""),
+        String(p["console-name"] ?? ""),
+        playerTokens
+      ),
       ungraded: pennies(p["loose-price"]),
       psa9: pennies(p["graded-price"]),
       psa10: pennies(p["manual-only-price"]),
