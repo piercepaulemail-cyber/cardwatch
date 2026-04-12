@@ -340,7 +340,7 @@ export default function CardDetailPage({
             rel="noopener noreferrer"
             className="bg-white text-navy font-bold px-6 py-3 rounded-xl border-2 border-gold hover:bg-gold/10 transition text-sm flex-1 text-center"
           >
-            Price Check &rarr;
+            Recent Comps &rarr;
           </a>
         </div>
 

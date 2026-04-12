@@ -313,7 +313,7 @@ export default function Home() {
                     </div>
                     <div className="flex gap-2 mt-3">
                       <span className="inline-block bg-navy text-white text-[9px] font-semibold px-2.5 py-1 rounded">View on eBay &rarr;</span>
-                      <span className="inline-block bg-white text-navy text-[9px] font-bold px-2.5 py-1 rounded border-2 border-gold">Price Check &rarr;</span>
+                      <span className="inline-block bg-white text-navy text-[9px] font-bold px-2.5 py-1 rounded border-2 border-gold">Recent Comps &rarr;</span>
                     </div>
                   </div>
                 </div>
@@ -390,9 +390,9 @@ export default function Home() {
               <div className="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
               </div>
-              <h3 className="text-lg font-bold text-navy mb-2">Price Check</h3>
+              <h3 className="text-lg font-bold text-navy mb-2">Recent Comps</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                One-click price check on every listing. See what the same card sold for recently so you can buy with confidence.
+                One-click recent comps on every listing. See what the same card sold for recently so you can buy with confidence.
               </p>
             </div>
           </div>

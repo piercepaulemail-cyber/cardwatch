@@ -19,7 +19,7 @@ const tiers = [
       "25 watchlist entries",
       "Scan every 2h, 6h, 12h, or daily",
       "Email alerts for new listings",
-      "Sortable results + price check",
+      "Sortable results + recent comps",
     ],
   },
   {

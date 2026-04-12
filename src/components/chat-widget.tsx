@@ -16,7 +16,7 @@ const FAQ: { keywords: string[]; response: string }[] = [
   {
     keywords: ["price", "cost", "how much", "pricing", "plan", "plans", "subscription", "subscribe", "pay"],
     response:
-      "We have 3 plans:\n\n• Scout — $4.99/mo: 25 watchlist entries, scan every 2h, 6h, 12h, or daily\n• Pro — $14.99/mo: 100 watchlist entries, scan every 30m, 45m, 1h, plus Scout options\n• Elite — $29.99/mo: Unlimited watchlist entries, scan as fast as every 15 minutes\n\nAll plans include email alerts, price check, and a 7-day free trial!",
+      "We have 3 plans:\n\n• Scout — $4.99/mo: 25 watchlist entries, scan every 2h, 6h, 12h, or daily\n• Pro — $14.99/mo: 100 watchlist entries, scan every 30m, 45m, 1h, plus Scout options\n• Elite — $29.99/mo: Unlimited watchlist entries, scan as fast as every 15 minutes\n\nAll plans include email alerts, recent comps, and a 7-day free trial!",
   },
   {
     keywords: ["scout"],
