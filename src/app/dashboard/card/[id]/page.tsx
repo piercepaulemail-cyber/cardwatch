@@ -286,6 +286,26 @@ export default function CardDetailPage({
           </p>
         </div>
 
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-3 mb-5">
+          <a
+            href={card.itemUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-green text-white font-bold px-6 py-3 rounded-xl hover:bg-green-light transition text-sm flex-1 text-center"
+          >
+            View on eBay &rarr;
+          </a>
+          <a
+            href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(cleanTitleForSearch(card.title))}&LH_Complete=1&LH_Sold=1&_sop=12&rt=nc`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white text-navy font-bold px-6 py-3 rounded-xl border-2 border-gold hover:bg-gold/10 transition text-sm flex-1 text-center"
+          >
+            View eBay Comps &rarr;
+          </a>
+        </div>
+
         {/* Seller + Bids + Listed */}
         <div className="grid grid-cols-3 gap-4 mb-5">
           <div>
@@ -321,26 +341,6 @@ export default function CardDetailPage({
           <p className="text-sm font-semibold text-navy">
             {card.matchedPlayer} — {card.matchedDesc}
           </p>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <a
-            href={card.itemUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-green text-white font-bold px-6 py-3 rounded-xl hover:bg-green-light transition text-sm flex-1 text-center"
-          >
-            View on eBay &rarr;
-          </a>
-          <a
-            href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(cleanTitleForSearch(card.title))}&LH_Complete=1&LH_Sold=1&_sop=12&rt=nc`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white text-navy font-bold px-6 py-3 rounded-xl border-2 border-gold hover:bg-gold/10 transition text-sm flex-1 text-center"
-          >
-            Recent Comps &rarr;
-          </a>
         </div>
 
         <button
