@@ -59,7 +59,7 @@ export async function GET(
   console.log(`[Detail] Market data needed: ${needsMarketData}, player: ${result.matchedPlayer}, desc: ${result.matchedDesc}`);
   console.log(`[Detail] SCP_API_KEY set: ${!!process.env.SCP_API_KEY}`);
 
-  const market = await getMarketPrices(result.matchedPlayer, result.matchedDesc);
+  const market = await getMarketPrices(result.matchedPlayer, result.matchedDesc, result.title);
   console.log(`[Detail] Market result:`, JSON.stringify(market));
 
   if (needsMarketData && market) {
@@ -83,6 +83,7 @@ export async function GET(
     rawMax: market?.ungradedMax ?? null,
     psa10Min: market?.psa10Min ?? null,
     psa10Max: market?.psa10Max ?? null,
+    compCount: market?.compCount ?? 0,
   });
 
   // Prevent caching so market data always fetches fresh

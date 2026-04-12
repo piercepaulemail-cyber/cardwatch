@@ -11,6 +11,7 @@ export interface MarketPrices {
   psa10: number | null;
   psa10Min: number | null;
   psa10Max: number | null;
+  compCount: number;
 }
 
 interface Comp {
@@ -34,10 +35,42 @@ function normalizeQuery(player: string, desc: string): string {
  * names ("T. McMillan") so requiring the full name is too aggressive.
  * Returns fraction of all meaningful tokens (len >= 2) found in the product name.
  */
+/** Noise words to ignore when extracting supplemental tokens from eBay titles */
+const TITLE_NOISE = new Set([
+  "new", "listing", "nm", "mint", "look", "hot", "rare", "sp", "ssp",
+  "rc", "rookie", "card", "cards", "the", "and", "for", "psa", "bgs",
+  "sgc", "see", "pics", "details", "lot", "case", "hit", "invest",
+  "shipping", "free", "fast", "🔥", "💎", "⭐",
+]);
+
+/**
+ * Extract meaningful tokens from an eBay title that aren't already in the
+ * base query. These help distinguish variations (e.g., "optic" vs "donruss",
+ * "black pandora" parallel, specific year/brand).
+ */
+function extractSupplementalTokens(
+  ebayTitle: string,
+  existingTokens: string[]
+): string[] {
+  const existing = new Set(existingTokens);
+  return ebayTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(
+      (t) =>
+        t.length >= 2 &&
+        !existing.has(t) &&
+        !TITLE_NOISE.has(t) &&
+        !/^\d{1}$/.test(t)
+    );
+}
+
 function scoreConfidence(
   queryTokens: string[],
   productName: string,
-  playerTokens: string[]
+  playerTokens: string[],
+  bonusTokens: string[] = []
 ): number {
   const nameLower = productName.toLowerCase();
 
@@ -58,7 +91,14 @@ function scoreConfidence(
     score = Math.max(score, 0.5);
   }
 
-  return score;
+  // Bonus: reward SCP products that match specific tokens from the eBay title
+  // (e.g., "optic", "prizm", "pandora", year). +0.05 per match, capped at +0.2.
+  if (bonusTokens.length) {
+    const bonusMatched = bonusTokens.filter((t) => nameLower.includes(t)).length;
+    score += Math.min(bonusMatched * 0.05, 0.2);
+  }
+
+  return Math.min(score, 1);
 }
 
 /**
@@ -90,6 +130,18 @@ function getTtlMs(confidenceScore: number): number {
   return 15 * 60 * 1000;                                          // 15 minutes
 }
 
+/** Return value at a given percentile (0–1) from a sorted array */
+function percentile(values: number[], p: number): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  if (sorted.length === 0) return 0;
+  if (sorted.length === 1) return sorted[0];
+  const idx = p * (sorted.length - 1);
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
 /** SCP cents-to-dollars conversion */
 function pennies(val: unknown): number | null {
   if (val === null || val === undefined || val === "" || val === "0") return null;
@@ -112,7 +164,8 @@ function pennies(val: unknown): number | null {
  */
 export async function getMarketPrices(
   playerName: string,
-  cardDescription: string
+  cardDescription: string,
+  ebayTitle?: string
 ): Promise<MarketPrices | null> {
   const apiKey = process.env.SCP_API_KEY;
   if (!apiKey) return null;
@@ -140,15 +193,29 @@ export async function getMarketPrices(
         (b, c) => (c.confidence > b.confidence ? c : b),
         comps[0]
       );
+      // Use IQR (P25-P75) for tighter ranges when we have enough data
+      const ungradedMin = cachedUngradedPrices.length >= 4
+        ? percentile(cachedUngradedPrices, 0.25)
+        : cachedUngradedPrices.length ? Math.min(...cachedUngradedPrices) : null;
+      const ungradedMax = cachedUngradedPrices.length >= 4
+        ? percentile(cachedUngradedPrices, 0.75)
+        : cachedUngradedPrices.length ? Math.max(...cachedUngradedPrices) : null;
+      const psa10Min = cachedPsa10Prices.length >= 4
+        ? percentile(cachedPsa10Prices, 0.25)
+        : cachedPsa10Prices.length ? Math.min(...cachedPsa10Prices) : null;
+      const psa10Max = cachedPsa10Prices.length >= 4
+        ? percentile(cachedPsa10Prices, 0.75)
+        : cachedPsa10Prices.length ? Math.max(...cachedPsa10Prices) : null;
       return {
         productName: best?.productName ?? null,
         scpProductId: best?.productId ?? null,
         ungraded: cached.finalPrice,
-        ungradedMin: cachedUngradedPrices.length ? Math.min(...cachedUngradedPrices) : null,
-        ungradedMax: cachedUngradedPrices.length ? Math.max(...cachedUngradedPrices) : null,
+        ungradedMin,
+        ungradedMax,
         psa10: best?.psa10 ?? null,
-        psa10Min: cachedPsa10Prices.length ? Math.min(...cachedPsa10Prices) : null,
-        psa10Max: cachedPsa10Prices.length ? Math.max(...cachedPsa10Prices) : null,
+        psa10Min,
+        psa10Max,
+        compCount: comps.length,
       };
     }
 
@@ -190,17 +257,26 @@ export async function getMarketPrices(
     // Player tokens must appear in every matched product — no set-level fallback
     const playerTokens = playerName.toLowerCase().split(/\s+/).filter((t) => t.length >= 2);
 
+    // Extract bonus tokens from eBay title for more precise scoring
+    const bonusTokens = ebayTitle
+      ? extractSupplementalTokens(ebayTitle, queryTokens)
+      : [];
+
     const comps: Comp[] = products.map((p) => ({
       productId: String(p.id ?? ""),
       productName: String(p["product-name"] ?? ""),
-      confidence: scoreConfidence(queryTokens, String(p["product-name"] ?? ""), playerTokens),
+      confidence: scoreConfidence(queryTokens, String(p["product-name"] ?? ""), playerTokens, bonusTokens),
       ungraded: pennies(p["loose-price"]),
       psa9: pennies(p["graded-price"]),
       psa10: pennies(p["manual-only-price"]),
     }));
 
     // Confidence threshold: 0.4 — a last-name-only match scores 0.5 and passes.
-    const validComps = comps.filter((c) => c.confidence > 0.4);
+    // Sort by confidence and take top 5 to mirror manual process of checking ~5 sales.
+    const validComps = comps
+      .filter((c) => c.confidence > 0.4)
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 5);
 
     if (!validComps.length) {
       console.log(`[SCP] No match for "${rawQuery}" — ${comps.length} results, none scored > 0.4`);
@@ -295,15 +371,30 @@ export async function getMarketPrices(
         `confidence=${avgConfidence.toFixed(2)}, TTL=${Math.round(getTtlMs(avgConfidence) / 60000)}m`
     );
 
+    // Use IQR (P25-P75) for tighter ranges when we have enough data
+    const ungradedMin = trimmedUngraded.length >= 4
+      ? percentile(trimmedUngraded, 0.25)
+      : trimmedUngraded.length ? Math.min(...trimmedUngraded) : null;
+    const ungradedMax = trimmedUngraded.length >= 4
+      ? percentile(trimmedUngraded, 0.75)
+      : trimmedUngraded.length ? Math.max(...trimmedUngraded) : null;
+    const psa10Min = trimmedPsa10.length >= 4
+      ? percentile(trimmedPsa10, 0.25)
+      : trimmedPsa10.length ? Math.min(...trimmedPsa10) : null;
+    const psa10Max = trimmedPsa10.length >= 4
+      ? percentile(trimmedPsa10, 0.75)
+      : trimmedPsa10.length ? Math.max(...trimmedPsa10) : null;
+
     return {
       productName: bestComp.productName,
       scpProductId: bestComp.productId,
       ungraded: finalPrice,
-      ungradedMin: trimmedUngraded.length ? Math.min(...trimmedUngraded) : null,
-      ungradedMax: trimmedUngraded.length ? Math.max(...trimmedUngraded) : null,
+      ungradedMin,
+      ungradedMax,
       psa10: bestComp.psa10,
-      psa10Min: trimmedPsa10.length ? Math.min(...trimmedPsa10) : null,
-      psa10Max: trimmedPsa10.length ? Math.max(...trimmedPsa10) : null,
+      psa10Min,
+      psa10Max,
+      compCount: compsForPrice.length,
     };
   } catch (e) {
     console.error("[SCP] Error:", e);

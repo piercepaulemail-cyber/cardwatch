@@ -3,7 +3,12 @@ import { sendEmail } from "./mailer";
 
 interface EmailResult extends EbayResult {
   marketUngraded?: number | null;
+  marketUngradedMin?: number | null;
+  marketUngradedMax?: number | null;
   marketPsa10?: number | null;
+  marketPsa10Min?: number | null;
+  marketPsa10Max?: number | null;
+  marketCompCount?: number;
 }
 
 function esc(str: string): string {
@@ -71,15 +76,18 @@ function buildEmailHtml(results: EmailResult[]): string {
             </td>
           </tr>
         </table>
-        ${(r.marketUngraded || r.marketPsa10) ? `
         <div style="margin-top:12px;padding:10px;background:#F5F6F8;border-radius:8px;">
-          <span style="color:#6B7A8D;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">Market Averages</span>
-          <div style="margin-top:6px;display:flex;gap:16px;">
-            ${r.marketUngraded ? `<div><span style="color:#6B7A8D;font-size:11px;">Raw:</span> <span style="color:#0B1D3A;font-weight:700;font-size:14px;">$${r.marketUngraded.toFixed(2)}</span></div>` : ""}
-            ${r.marketPsa10 ? `<div><span style="color:#6B7A8D;font-size:11px;">PSA 10:</span> <span style="color:#0B1D3A;font-weight:700;font-size:14px;">$${r.marketPsa10.toFixed(2)}</span></div>` : ""}
-          </div>
+          <span style="color:#6B7A8D;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;">Market Ranges</span>
+          ${(r.marketUngradedMin || r.marketPsa10Min) ? `
+          <table style="width:100%;margin-top:6px;" cellpadding="0" cellspacing="0">
+            <tr>
+              ${r.marketUngradedMin != null ? `<td style="padding:2px 8px 2px 0;"><span style="color:#6B7A8D;font-size:11px;">Raw:</span> <span style="color:#0B1D3A;font-weight:700;font-size:14px;">${r.marketUngradedMin === r.marketUngradedMax ? `$${r.marketUngradedMin.toFixed(0)}` : `$${r.marketUngradedMin.toFixed(0)} – $${r.marketUngradedMax!.toFixed(0)}`}</span></td>` : ""}
+              ${r.marketPsa10Min != null ? `<td style="padding:2px 0;"><span style="color:#6B7A8D;font-size:11px;">PSA 10:</span> <span style="color:#0B1D3A;font-weight:700;font-size:14px;">${r.marketPsa10Min === r.marketPsa10Max ? `$${r.marketPsa10Min.toFixed(0)}` : `$${r.marketPsa10Min.toFixed(0)} – $${r.marketPsa10Max!.toFixed(0)}`}</span></td>` : ""}
+            </tr>
+          </table>
+          ${r.marketCompCount ? `<span style="color:#9CA3AF;font-size:10px;margin-top:4px;display:block;">Based on ${r.marketCompCount} comp${r.marketCompCount !== 1 ? "s" : ""}</span>` : ""}
+          ` : `<p style="color:#9CA3AF;font-size:11px;margin:6px 0 0 0;">No market data available</p>`}
         </div>
-        ` : ""}
         <div style="margin-top:12px;">
           <a href="${safeUrl(r.itemUrl)}" style="display:inline-block;background:#0B1D3A;color:#FFFFFF;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">View on eBay &rarr;</a>
           <a href="https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(cleanTitleForSearch(r.title))}&LH_Complete=1&LH_Sold=1&_sop=12&rt=nc" style="display:inline-block;background:#FFFFFF;color:#0B1D3A;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;border:2px solid #D4A847;margin-left:8px;">Recent Comps &rarr;</a>
