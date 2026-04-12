@@ -65,6 +65,7 @@ export default function CardDetailPage({
   const [imgIndex, setImgIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const wasMultiTouch = useRef(false);
+  const galleryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -132,6 +133,7 @@ export default function CardDetailPage({
             {/* Main image */}
             <div
               className="relative rounded-xl overflow-hidden border border-border bg-secondary"
+              ref={galleryRef}
               onTouchStart={(e) => {
                 wasMultiTouch.current = e.touches.length > 1;
                 touchStartX.current = e.touches[0].clientX;
@@ -140,7 +142,11 @@ export default function CardDetailPage({
                 if (e.touches.length > 1) wasMultiTouch.current = true;
               }}
               onTouchEnd={(e) => {
-                if (touchStartX.current === null || card.images.length <= 1 || wasMultiTouch.current) {
+                // Skip swipe if pinch-zoom occurred or page is zoomed in
+                const isZoomed = window.visualViewport
+                  ? window.visualViewport.scale > 1.05
+                  : false;
+                if (touchStartX.current === null || card.images.length <= 1 || wasMultiTouch.current || isZoomed) {
                   touchStartX.current = null;
                   wasMultiTouch.current = false;
                   return;
