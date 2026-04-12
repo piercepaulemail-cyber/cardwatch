@@ -125,27 +125,40 @@ export async function getMarketPrices(
       return null;
     }
 
-    // ── 3. Use the first result with a price ───────────────────────────────
-    // The eBay title is specific enough that SCP's first result is the right
-    // card. Just verify the player's last name is in the product/set name.
+    // ── 3. Pick the best result ──────────────────────────────────────────
+    // Prefer results where the product name doesn't have extra words absent
+    // from the search query. This avoids picking "Abdul Carter [Oversized]"
+    // when the listing is just "Abdul Carter Downtown".
     const lastName = playerName.toLowerCase().split(/\s+/).filter((t) => t.length >= 2).at(-1) ?? "";
+    const queryWords = new Set(searchQuery.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((t) => t.length >= 2));
 
-    const comps: Comp[] = products.map((p) => {
-      const combined = `${String(p["product-name"] ?? "")} ${String(p["console-name"] ?? "")}`.toLowerCase();
+    const comps = products.map((p) => {
+      const productName = String(p["product-name"] ?? "");
+      const setName = String(p["console-name"] ?? "");
+      const combined = `${productName} ${setName}`.toLowerCase();
+      const hasPlayer = lastName ? combined.includes(lastName) : true;
+
+      // Count words in product name NOT present in search query — fewer extras = better match
+      const productWords = productName.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((t) => t.length >= 2);
+      const extraWords = productWords.filter((w) => !queryWords.has(w)).length;
+
       return {
         productId: String(p.id ?? ""),
-        productName: String(p["product-name"] ?? ""),
+        productName,
         confidence: 1,
         ungraded: pennies(p["loose-price"]),
         psa9: pennies(p["graded-price"]),
         psa10: pennies(p["manual-only-price"]),
-        _hasPlayer: lastName ? combined.includes(lastName) : true,
+        _hasPlayer: hasPlayer,
+        _extraWords: extraWords,
       };
     });
 
-    const bestMatch =
-      comps.find((c) => (c as Comp & { _hasPlayer: boolean })._hasPlayer && c.ungraded !== null) ??
-      comps.find((c) => c.ungraded !== null);
+    // Filter to player matches with prices, then pick the one with fewest extra words
+    const candidates = comps.filter((c) => c._hasPlayer && c.ungraded !== null);
+    candidates.sort((a, b) => a._extraWords - b._extraWords);
+
+    const bestMatch = candidates[0] ?? comps.find((c) => c.ungraded !== null);
 
     if (!bestMatch) {
       console.log(`[SCP] No priced result for "${searchQuery}"`);
