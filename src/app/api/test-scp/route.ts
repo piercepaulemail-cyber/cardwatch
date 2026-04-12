@@ -2,29 +2,54 @@ import { NextResponse, connection } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-/** Mirror of the scoring logic so the test endpoint shows real scores */
+/**
+ * Mirror of scoreConfidence() in sportscardspro.ts.
+ * Weights: last name = 0.5 (required), first name = 0.2,
+ *          numeric tokens (card #) = 0.2, other tokens (set/year) = 0.1
+ */
 function scoreConfidenceDebug(
   queryTokens: string[],
   productName: string,
   playerTokens: string[]
 ): { score: number; matched: string[]; misses: string[]; playerHit: boolean; lastNameHit: boolean } {
   const nameLower = productName.toLowerCase();
-  const hasAnyPlayerToken = playerTokens.some((t) => nameLower.includes(t));
-  if (!hasAnyPlayerToken) {
+  const lastName = playerTokens.at(-1) ?? "";
+  const firstName = playerTokens.length > 1 ? playerTokens[0] : null;
+  const lastNameHit = !!lastName && nameLower.includes(lastName);
+
+  if (!lastNameHit) {
     const meaningful = queryTokens.filter((t) => t.length >= 2);
     return { score: 0, matched: [], misses: meaningful, playerHit: false, lastNameHit: false };
   }
 
-  const meaningful = queryTokens.filter((t) => t.length >= 2);
-  const matched = meaningful.filter((t) => nameLower.includes(t));
-  const misses = meaningful.filter((t) => !nameLower.includes(t));
-  let score = matched.length / meaningful.length;
+  let score = 0.5;
+  const matchedTokens: string[] = [lastName];
+  const missedTokens: string[] = [];
 
-  const lastName = playerTokens.at(-1) ?? "";
-  const lastNameHit = !!lastName && nameLower.includes(lastName);
-  if (lastNameHit) score = Math.max(score, 0.5);
+  if (firstName && firstName !== lastName) {
+    if (nameLower.includes(firstName)) { score += 0.2; matchedTokens.push(firstName); }
+    else missedTokens.push(firstName);
+  }
 
-  return { score, matched, misses, playerHit: true, lastNameHit };
+  const playerPartsSet = new Set(playerTokens);
+  const otherTokens = queryTokens.filter((t) => t.length >= 2 && !playerPartsSet.has(t));
+  const cardNumTokens = otherTokens.filter((t) => /^\d+$/.test(t));
+  const setYearTokens = otherTokens.filter((t) => !/^\d+$/.test(t));
+
+  if (cardNumTokens.length > 0) {
+    const m = cardNumTokens.filter((t) => nameLower.includes(t));
+    score += (m.length / cardNumTokens.length) * 0.2;
+    matchedTokens.push(...m);
+    missedTokens.push(...cardNumTokens.filter((t) => !nameLower.includes(t)));
+  }
+  if (setYearTokens.length > 0) {
+    const m = setYearTokens.filter((t) => nameLower.includes(t));
+    score += (m.length / setYearTokens.length) * 0.1;
+    matchedTokens.push(...m);
+    missedTokens.push(...setYearTokens.filter((t) => !nameLower.includes(t)));
+  }
+
+  return { score: Math.min(score, 1.0), matched: matchedTokens, misses: missedTokens, playerHit: true, lastNameHit };
 }
 
 export async function GET() {
@@ -114,9 +139,9 @@ export async function GET() {
         };
       });
 
-      const highConf = allScores.filter((s) => s > 0.7).length;
-      const playerMatch = allScores.filter((s) => s > 0).length;
+      const passing = allScores.filter((s) => s > 0.4).length;
       const rejected = allScores.filter((s) => s === 0).length;
+      const lowConf = allScores.filter((s) => s > 0 && s <= 0.4).length;
 
       scoringResults.push({
         query: rawQuery,
@@ -125,15 +150,13 @@ export async function GET() {
         queryTokens,
         productCount: products.length,
         summary: {
-          highConfidence_gt07: highConf,
-          playerMatched_gt0: playerMatch,
-          rejected_noPlayerToken: rejected,
+          passing_gt04: passing,
+          lowConf_0to04: lowConf,
+          rejected_noLastName: rejected,
           wouldUse:
-            highConf > 0
-              ? `${highConf} high-conf comps`
-              : playerMatch > 0
-                ? `${playerMatch} player-matched comps (fallback)`
-                : "NONE — no player token matched any product",
+            passing > 0
+              ? `${passing} comps (confidence > 0.4)`
+              : "NONE — no product contained player's last name",
         },
         top20Products: top20,
       });
