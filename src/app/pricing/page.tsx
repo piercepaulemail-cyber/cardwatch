@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -106,7 +106,15 @@ export default function PricingPage() {
         </Link>
         <div className="flex items-center gap-3">
           {session ? (
-            <span className="text-sm text-white/60">{session.user?.email}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-white/60">{session.user?.email}</span>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="text-white/60 hover:text-white text-sm transition"
+              >
+                Sign out
+              </button>
+            </div>
           ) : (
             <button
               onClick={() => router.push("/login")}
